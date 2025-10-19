@@ -16,31 +16,127 @@ export type Database = {
     Tables: {
       affaires: {
         Row: {
+          adresse_complete: string | null
+          circonstances: string | null
+          commissionnaire_en_d: string | null
+          composition_dossier: string | null
           created_at: string
           date_affaire: string
+          date_de_la_transaction_provisoire: string | null
+          date_declaration: string | null
+          date_quittance: string | null
+          droits_compromis_ou_eludes: number | null
           id: string
+          identification_mt: string | null
+          ifu: string | null
+          montant_amende_ou_vente: number | null
           montant_net: number
           montant_total: number
+          montant_total_des_frais: number | null
+          nature_de_l_infraction: string | null
+          nature_des_marchandises_de_fraude: string | null
+          nature_et_moyen_de_transport: string | null
+          nom_intervenants: string | null
+          nom_prenom_contrevenant: string | null
+          nom_saisissants: string | null
+          nombre: number | null
+          nombre_informateurs: number | null
+          noms_des_chefs: string | null
+          notes_supplementaires: string | null
+          num_declaration: string | null
+          num_quittance: string | null
+          num_quittance_dce: string | null
           numero: string
+          office: string | null
+          origine_ou_provenance: string | null
+          procede_de_detection: string | null
+          region: string | null
+          suite_de_l_affaire: string | null
+          suite_reservee_aux_mdses: string | null
           updated_at: string
+          valeur_des_marchandises_litigieuses: number | null
         }
         Insert: {
+          adresse_complete?: string | null
+          circonstances?: string | null
+          commissionnaire_en_d?: string | null
+          composition_dossier?: string | null
           created_at?: string
           date_affaire: string
+          date_de_la_transaction_provisoire?: string | null
+          date_declaration?: string | null
+          date_quittance?: string | null
+          droits_compromis_ou_eludes?: number | null
           id?: string
+          identification_mt?: string | null
+          ifu?: string | null
+          montant_amende_ou_vente?: number | null
           montant_net: number
           montant_total?: number
+          montant_total_des_frais?: number | null
+          nature_de_l_infraction?: string | null
+          nature_des_marchandises_de_fraude?: string | null
+          nature_et_moyen_de_transport?: string | null
+          nom_intervenants?: string | null
+          nom_prenom_contrevenant?: string | null
+          nom_saisissants?: string | null
+          nombre?: number | null
+          nombre_informateurs?: number | null
+          noms_des_chefs?: string | null
+          notes_supplementaires?: string | null
+          num_declaration?: string | null
+          num_quittance?: string | null
+          num_quittance_dce?: string | null
           numero: string
+          office?: string | null
+          origine_ou_provenance?: string | null
+          procede_de_detection?: string | null
+          region?: string | null
+          suite_de_l_affaire?: string | null
+          suite_reservee_aux_mdses?: string | null
           updated_at?: string
+          valeur_des_marchandises_litigieuses?: number | null
         }
         Update: {
+          adresse_complete?: string | null
+          circonstances?: string | null
+          commissionnaire_en_d?: string | null
+          composition_dossier?: string | null
           created_at?: string
           date_affaire?: string
+          date_de_la_transaction_provisoire?: string | null
+          date_declaration?: string | null
+          date_quittance?: string | null
+          droits_compromis_ou_eludes?: number | null
           id?: string
+          identification_mt?: string | null
+          ifu?: string | null
+          montant_amende_ou_vente?: number | null
           montant_net?: number
           montant_total?: number
+          montant_total_des_frais?: number | null
+          nature_de_l_infraction?: string | null
+          nature_des_marchandises_de_fraude?: string | null
+          nature_et_moyen_de_transport?: string | null
+          nom_intervenants?: string | null
+          nom_prenom_contrevenant?: string | null
+          nom_saisissants?: string | null
+          nombre?: number | null
+          nombre_informateurs?: number | null
+          noms_des_chefs?: string | null
+          notes_supplementaires?: string | null
+          num_declaration?: string | null
+          num_quittance?: string | null
+          num_quittance_dce?: string | null
           numero?: string
+          office?: string | null
+          origine_ou_provenance?: string | null
+          procede_de_detection?: string | null
+          region?: string | null
+          suite_de_l_affaire?: string | null
+          suite_reservee_aux_mdses?: string | null
           updated_at?: string
+          valeur_des_marchandises_litigieuses?: number | null
         }
         Relationships: []
       }
