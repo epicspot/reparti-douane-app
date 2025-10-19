@@ -10,7 +10,8 @@ import {
   LogOut,
   Menu,
   X,
-  Shield
+  Shield,
+  BarChart3
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 
@@ -54,6 +55,7 @@ const Layout = ({ children }: LayoutProps) => {
     { path: "/saisie", label: "Saisie Répartition", icon: FileText },
     { path: "/historique", label: "Historique", icon: History },
     { path: "/configuration", label: "Configuration", icon: Settings },
+    { path: "/statistiques", label: "Statistiques", icon: BarChart3 },
   ];
 
   if (!user) {

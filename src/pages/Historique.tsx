@@ -19,7 +19,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Eye, FileDown } from "lucide-react";
+import { Search, Eye, FileDown, FileSpreadsheet, FileText } from "lucide-react";
+import { exportToPDF, exportToXLSX, exportToCSV } from "@/lib/exportUtils";
 
 const Historique = () => {
   const [affaires, setAffaires] = useState<any[]>([]);
@@ -75,11 +76,48 @@ const Historique = () => {
     setDialogOpen(true);
   };
 
-  const exporterPDF = (affaire: any) => {
-    toast({
-      title: "Export PDF",
-      description: "Fonctionnalité d'export PDF en développement",
-    });
+  const handleExport = async (
+    affaire: any,
+    type: "pdf" | "xlsx" | "csv"
+  ) => {
+    try {
+      const { data: beneficiaires } = await supabase
+        .from("beneficiaires")
+        .select("*")
+        .eq("affaire_id", affaire.id);
+
+      if (!beneficiaires) {
+        toast({
+          title: "Erreur",
+          description: "Impossible de charger les bénéficiaires",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      switch (type) {
+        case "pdf":
+          exportToPDF(affaire, beneficiaires);
+          break;
+        case "xlsx":
+          exportToXLSX(affaire, beneficiaires);
+          break;
+        case "csv":
+          exportToCSV(affaire, beneficiaires);
+          break;
+      }
+
+      toast({
+        title: "Succès",
+        description: `Export ${type.toUpperCase()} réussi`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const formatMontant = (montant: number) => {
@@ -196,10 +234,26 @@ const Historique = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => exporterPDF(affaire)}
+                        onClick={() => handleExport(affaire, "pdf")}
                       >
                         <FileDown className="w-4 h-4 mr-1" />
                         PDF
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExport(affaire, "xlsx")}
+                      >
+                        <FileSpreadsheet className="w-4 h-4 mr-1" />
+                        XLSX
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleExport(affaire, "csv")}
+                      >
+                        <FileText className="w-4 h-4 mr-1" />
+                        CSV
                       </Button>
                     </TableCell>
                   </TableRow>
