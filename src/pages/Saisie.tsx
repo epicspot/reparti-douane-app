@@ -5,6 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import {
   Table,
   TableBody,
   TableCell,
@@ -42,6 +51,14 @@ const Saisie = () => {
   const [chefs, setChefs] = useState<any[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // Dialog state
+  const [showAutoDialog, setShowAutoDialog] = useState(false);
+  const [saisissantsInput, setSaisissantsInput] = useState("");
+  const [hasIndicateur, setHasIndicateur] = useState(false);
+  const [indicateurNom, setIndicateurNom] = useState("");
+  const [hasIntervenants, setHasIntervenants] = useState(false);
+  const [intervenantsInput, setIntervenantsInput] = useState("");
 
   useEffect(() => {
     loadConfig();
@@ -100,7 +117,7 @@ const Saisie = () => {
     setBeneficiaires(beneficiaires.filter((_, i) => i !== index));
   };
 
-  const repartitionAuto = async () => {
+  const openAutoDialog = () => {
     const net = parseFloat(montantNet) || 0;
     if (net === 0) {
       toast({
@@ -110,34 +127,33 @@ const Saisie = () => {
       });
       return;
     }
+    setShowAutoDialog(true);
+  };
 
-    // Demander les saisissants
-    const saisissantsText = prompt(
-      "Entrez les noms des saisissants (séparés par des virgules) :"
-    );
-    if (!saisissantsText) return;
-
-    // Demander s'il y a un indicateur
-    const hasIndicateur = confirm("Y a-t-il un indicateur ?");
-    let indicateurNom = "";
-    if (hasIndicateur) {
-      indicateurNom = prompt("Entrez le nom de l'indicateur :") || "";
-      if (!indicateurNom) return;
+  const repartitionAuto = () => {
+    if (!saisissantsInput.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez saisir au moins un saisissant",
+        variant: "destructive",
+      });
+      return;
     }
 
-    // Demander s'il y a des intervenants
-    const hasIntervenants = confirm("Y a-t-il des intervenants ?");
-    let intervenants: string[] = [];
-    if (hasIntervenants) {
-      const intervenantsText = prompt(
-        "Entrez les noms des intervenants (séparés par des virgules) :"
-      );
-      if (intervenantsText) {
-        intervenants = intervenantsText.split(",").map((s) => s.trim());
-      }
+    if (hasIndicateur && !indicateurNom.trim()) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez saisir le nom de l'indicateur",
+        variant: "destructive",
+      });
+      return;
     }
 
-    const saisissants = saisissantsText.split(",").map((s) => s.trim());
+    const net = parseFloat(montantNet) || 0;
+    const saisissants = saisissantsInput.split(",").map((s) => s.trim());
+    const intervenants = hasIntervenants
+      ? intervenantsInput.split(",").map((s) => s.trim()).filter(s => s)
+      : [];
     const newBeneficiaires: Beneficiaire[] = [];
 
     // 1. Part Budget (50%)
@@ -246,6 +262,12 @@ const Saisie = () => {
     }
 
     setBeneficiaires(newBeneficiaires);
+    setShowAutoDialog(false);
+    setSaisissantsInput("");
+    setHasIndicateur(false);
+    setIndicateurNom("");
+    setHasIntervenants(false);
+    setIntervenantsInput("");
     toast({
       title: "Répartition effectuée",
       description: "La répartition automatique a été appliquée",
@@ -423,7 +445,7 @@ const Saisie = () => {
           <CardTitle className="flex items-center justify-between">
             <span>Bénéficiaires</span>
             <div className="flex gap-2">
-              <Button onClick={repartitionAuto} variant="outline" size="sm">
+              <Button onClick={openAutoDialog} variant="outline" size="sm">
                 <Wand2 className="w-4 h-4 mr-2" />
                 Répartition Auto
               </Button>
@@ -520,6 +542,112 @@ const Saisie = () => {
           Enregistrer la répartition
         </Button>
       </div>
+
+      {/* Dialog pour la répartition automatique */}
+      <Dialog open={showAutoDialog} onOpenChange={setShowAutoDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Répartition Automatique</DialogTitle>
+            <DialogDescription>
+              Configurez les paramètres pour la répartition automatique selon les règles métier
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="saisissants">
+                Saisissants * <span className="text-muted-foreground text-sm">(séparés par des virgules)</span>
+              </Label>
+              <Input
+                id="saisissants"
+                value={saisissantsInput}
+                onChange={(e) => setSaisissantsInput(e.target.value)}
+                placeholder="Ex: Jean Dupont, Marie Martin, Paul Durand"
+              />
+            </div>
+
+            <div className="space-y-4 border rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="indicateur-switch">Indicateur</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Part de 10% si applicable
+                  </p>
+                </div>
+                <Switch
+                  id="indicateur-switch"
+                  checked={hasIndicateur}
+                  onCheckedChange={setHasIndicateur}
+                />
+              </div>
+              
+              {hasIndicateur && (
+                <div className="space-y-2 animate-fade-in">
+                  <Label htmlFor="indicateur-nom">Nom de l'indicateur *</Label>
+                  <Input
+                    id="indicateur-nom"
+                    value={indicateurNom}
+                    onChange={(e) => setIndicateurNom(e.target.value)}
+                    placeholder="Ex: Service Indicateurs"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4 border rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="intervenants-switch">Intervenants</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Part égale à la moitié d'un saisissant
+                  </p>
+                </div>
+                <Switch
+                  id="intervenants-switch"
+                  checked={hasIntervenants}
+                  onCheckedChange={setHasIntervenants}
+                />
+              </div>
+              
+              {hasIntervenants && (
+                <div className="space-y-2 animate-fade-in">
+                  <Label htmlFor="intervenants">
+                    Noms des intervenants <span className="text-muted-foreground text-sm">(séparés par des virgules)</span>
+                  </Label>
+                  <Input
+                    id="intervenants"
+                    value={intervenantsInput}
+                    onChange={(e) => setIntervenantsInput(e.target.value)}
+                    placeholder="Ex: Sophie Laurent, Pierre Moreau"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="bg-muted p-4 rounded-lg space-y-2">
+              <h4 className="font-semibold text-sm">Répartition appliquée :</h4>
+              <ul className="text-sm space-y-1 text-muted-foreground">
+                <li>• Part Budget : 50%</li>
+                <li>• FSP : 4%</li>
+                <li>• Saisissants : 25% (réparti entre tous)</li>
+                {hasIndicateur && <li>• Indicateur : 10%</li>}
+                {hasIntervenants && <li>• Intervenants : moitié de la part d'un saisissant (chacun)</li>}
+                <li>• Reste : réparti entre les autres fonds</li>
+              </ul>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAutoDialog(false)}>
+              Annuler
+            </Button>
+            <Button onClick={repartitionAuto}>
+              <Wand2 className="w-4 h-4 mr-2" />
+              Appliquer la répartition
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
