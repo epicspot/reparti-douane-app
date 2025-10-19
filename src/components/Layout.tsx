@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   Shield,
-  BarChart3
+  BarChart3,
+  FilePlus
 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 
@@ -52,7 +53,7 @@ const Layout = ({ children }: LayoutProps) => {
 
   const menuItems = [
     { path: "/", label: "Tableau de bord", icon: LayoutDashboard },
-    { path: "/saisie", label: "Saisie Répartition", icon: FileText },
+    { path: "/nouvelle-affaire", label: "Nouvelle Affaire", icon: FilePlus },
     { path: "/historique", label: "Historique", icon: History },
     { path: "/configuration", label: "Configuration", icon: Settings },
     { path: "/statistiques", label: "Statistiques", icon: BarChart3 },

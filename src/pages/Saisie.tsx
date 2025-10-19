@@ -3,14 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import {
   Dialog,
   DialogContent,
@@ -36,8 +29,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Save, Wand2, Trash2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Plus, Save, Wand2, Trash2, AlertCircle } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface Beneficiaire {
   nom: string;
@@ -47,52 +40,14 @@ interface Beneficiaire {
 }
 
 const Saisie = () => {
-  // États de base
-  const [numero, setNumero] = useState("");
-  const [dateAffaire, setDateAffaire] = useState(
-    new Date().toISOString().split("T")[0]
-  );
-  const [montantTotal, setMontantTotal] = useState("");
-  const [montantNet, setMontantNet] = useState("");
+  const { affaireId } = useParams();
+  const [affaire, setAffaire] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [beneficiaires, setBeneficiaires] = useState<Beneficiaire[]>([]);
   const [fonds, setFonds] = useState<any[]>([]);
   const [chefs, setChefs] = useState<any[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
-  
-  // Nouveaux champs du formulaire détaillé
-  const [region, setRegion] = useState("");
-  const [office, setOffice] = useState("");
-  const [numDeclaration, setNumDeclaration] = useState("");
-  const [dateDeclaration, setDateDeclaration] = useState("");
-  const [nomPrenomContrevenant, setNomPrenomContrevenant] = useState("");
-  const [adresseComplete, setAdresseComplete] = useState("");
-  const [ifu, setIfu] = useState("");
-  const [natureEtMoyenDeTransport, setNatureEtMoyenDeTransport] = useState("");
-  const [identificationMt, setIdentificationMt] = useState("");
-  const [commissionnaireEnD, setCommissionnaireEnD] = useState("");
-  const [procedeDeDetection, setProcedeDeDetection] = useState("");
-  const [nombre, setNombre] = useState("");
-  const [natureMarchandisesFraude, setNatureMarchandisesFraude] = useState("");
-  const [origineOuProvenance, setOrigineOuProvenance] = useState("");
-  const [valeurMarchandisesLitigieuses, setValeurMarchandisesLitigieuses] = useState("");
-  const [natureDeLInfraction, setNatureDeLInfraction] = useState("");
-  const [droitsCompromisOuEludes, setDroitsCompromisOuEludes] = useState("");
-  const [numQuittanceDce, setNumQuittanceDce] = useState("");
-  const [compositionDossier, setCompositionDossier] = useState("");
-  const [circonstances, setCirconstances] = useState("");
-  const [nombreInformateurs, setNombreInformateurs] = useState("0");
-  const [suiteDeLAffaire, setSuiteDeLAffaire] = useState("");
-  const [dateDelaTransactionProvisoire, setDateDelaTransactionProvisoire] = useState("");
-  const [montantAmendeOuVente, setMontantAmendeOuVente] = useState("");
-  const [numQuittance, setNumQuittance] = useState("");
-  const [dateQuittance, setDateQuittance] = useState("");
-  const [montantTotalDesFrais, setMontantTotalDesFrais] = useState("0");
-  const [nomsDesChefs, setNomsDesChefs] = useState("");
-  const [nomSaisissants, setNomSaisissants] = useState("");
-  const [nomIntervenants, setNomIntervenants] = useState("");
-  const [suiteReserveeAuxMdses, setSuiteReserveeAuxMdses] = useState("");
-  const [notesSupplementaires, setNotesSupplementaires] = useState("");
   
   // Dialog state
   const [showAutoDialog, setShowAutoDialog] = useState(false);
@@ -103,32 +58,68 @@ const Saisie = () => {
   const [intervenantsInput, setIntervenantsInput] = useState("");
 
   useEffect(() => {
-    loadConfig();
-  }, []);
+    loadAffaireAndConfig();
+  }, [affaireId]);
 
-  const loadConfig = async () => {
-    const { data: fondsData } = await supabase.from("fonds").select("*");
-    const { data: chefsData } = await supabase.from("chefs").select("*");
-    setFonds(fondsData || []);
-    setChefs(chefsData || []);
-  };
+  const loadAffaireAndConfig = async () => {
+    try {
+      setLoading(true);
+      
+      // Charger l'affaire
+      const { data: affaireData, error: affaireError } = await supabase
+        .from("affaires")
+        .select("*")
+        .eq("id", affaireId)
+        .single();
 
-  const generateNumero = () => {
-    const year = new Date(dateAffaire).getFullYear();
-    const random = Math.floor(Math.random() * 1000)
-      .toString()
-      .padStart(3, "0");
-    return `REP-${year}-${random}`;
-  };
+      if (affaireError) throw affaireError;
+      
+      if (!affaireData) {
+        toast({
+          title: "Erreur",
+          description: "Affaire introuvable",
+          variant: "destructive",
+        });
+        navigate("/historique");
+        return;
+      }
 
-  useEffect(() => {
-    if (!numero) {
-      setNumero(generateNumero());
+      setAffaire(affaireData);
+
+      // Charger la configuration
+      const { data: fondsData } = await supabase.from("fonds").select("*");
+      const { data: chefsData } = await supabase.from("chefs").select("*");
+      setFonds(fondsData || []);
+      setChefs(chefsData || []);
+      
+      // Charger les bénéficiaires existants si présents
+      const { data: benefData } = await supabase
+        .from("beneficiaires")
+        .select("*")
+        .eq("affaire_id", affaireId);
+      
+      if (benefData && benefData.length > 0) {
+        setBeneficiaires(benefData.map(b => ({
+          nom: b.nom,
+          type: b.type,
+          montant: b.montant,
+          pourcentage: b.pourcentage
+        })));
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  }, [dateAffaire]);
+  };
 
   const calculerPourcentages = () => {
-    const net = parseFloat(montantNet) || 0;
+    if (!affaire) return;
+    const net = affaire.montant_net || 0;
     if (net === 0) return;
 
     const newBeneficiaires = beneficiaires.map((b) => ({
@@ -140,7 +131,7 @@ const Saisie = () => {
 
   useEffect(() => {
     calculerPourcentages();
-  }, [montantNet]);
+  }, [affaire]);
 
   const ajouterBeneficiaire = () => {
     setBeneficiaires([
@@ -160,11 +151,10 @@ const Saisie = () => {
   };
 
   const openAutoDialog = () => {
-    const net = parseFloat(montantNet) || 0;
-    if (net === 0) {
+    if (!affaire || affaire.montant_net === 0) {
       toast({
         title: "Erreur",
-        description: "Veuillez saisir un montant net valide",
+        description: "Le montant net de l'affaire est invalide",
         variant: "destructive",
       });
       return;
@@ -191,7 +181,7 @@ const Saisie = () => {
       return;
     }
 
-    const net = parseFloat(montantNet) || 0;
+    const net = affaire.montant_net || 0;
     const saisissants = saisissantsInput.split(",").map((s) => s.trim());
     const intervenants = hasIntervenants
       ? intervenantsInput.split(",").map((s) => s.trim()).filter(s => s)
@@ -265,7 +255,6 @@ const Saisie = () => {
     const reste = net - totalDistribue;
 
     if (reste > 0 && fonds.length > 0) {
-      // Filtrer les fonds qui ne sont pas déjà dans la liste
       const autresFonds = fonds.filter(
         (f) => f.nom !== "Part Budget" && f.nom !== "FSP"
       );
@@ -289,7 +278,6 @@ const Saisie = () => {
             });
           });
         } else {
-          // Si pas de pondération, répartir équitablement
           const montantParFond = Math.round(reste / autresFonds.length);
           autresFonds.forEach((fond) => {
             newBeneficiaires.push({
@@ -317,20 +305,13 @@ const Saisie = () => {
   };
 
   const enregistrer = async () => {
-    if (!numero || !dateAffaire || !montantNet) {
-      toast({
-        title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!affaire) return;
 
     const totalDistribue = beneficiaires.reduce(
       (acc, b) => acc + (b.montant || 0),
       0
     );
-    const net = parseFloat(montantNet) || 0;
+    const net = affaire.montant_net || 0;
 
     if (totalDistribue > net) {
       toast({
@@ -342,53 +323,13 @@ const Saisie = () => {
     }
 
     try {
-      const { data: affaire, error: affaireError } = await supabase
-        .from("affaires")
-        .insert([
-          {
-            numero,
-            date_affaire: dateAffaire,
-            montant_total: parseFloat(montantTotal) || 0,
-            montant_net: net,
-            region,
-            office,
-            num_declaration: numDeclaration,
-            date_declaration: dateDeclaration || null,
-            nom_prenom_contrevenant: nomPrenomContrevenant,
-            adresse_complete: adresseComplete,
-            ifu,
-            nature_et_moyen_de_transport: natureEtMoyenDeTransport,
-            identification_mt: identificationMt,
-            commissionnaire_en_d: commissionnaireEnD,
-            procede_de_detection: procedeDeDetection,
-            nombre: parseInt(nombre) || null,
-            nature_des_marchandises_de_fraude: natureMarchandisesFraude,
-            origine_ou_provenance: origineOuProvenance,
-            valeur_des_marchandises_litigieuses: parseInt(valeurMarchandisesLitigieuses) || null,
-            nature_de_l_infraction: natureDeLInfraction,
-            droits_compromis_ou_eludes: parseInt(droitsCompromisOuEludes) || null,
-            num_quittance_dce: numQuittanceDce,
-            composition_dossier: compositionDossier,
-            circonstances,
-            nombre_informateurs: parseInt(nombreInformateurs) || 0,
-            suite_de_l_affaire: suiteDeLAffaire,
-            date_de_la_transaction_provisoire: dateDelaTransactionProvisoire || null,
-            montant_amende_ou_vente: parseInt(montantAmendeOuVente) || null,
-            num_quittance: numQuittance,
-            date_quittance: dateQuittance || null,
-            montant_total_des_frais: parseInt(montantTotalDesFrais) || 0,
-            noms_des_chefs: nomsDesChefs,
-            nom_saisissants: nomSaisissants,
-            nom_intervenants: nomIntervenants,
-            suite_reservee_aux_mdses: suiteReserveeAuxMdses,
-            notes_supplementaires: notesSupplementaires,
-          },
-        ])
-        .select()
-        .single();
+      // Supprimer les anciens bénéficiaires
+      await supabase
+        .from("beneficiaires")
+        .delete()
+        .eq("affaire_id", affaire.id);
 
-      if (affaireError) throw affaireError;
-
+      // Insérer les nouveaux bénéficiaires
       const beneficiairesData = beneficiaires.map((b) => ({
         affaire_id: affaire.id,
         nom: b.nom,
@@ -408,12 +349,6 @@ const Saisie = () => {
         description: "La répartition a été enregistrée avec succès",
       });
 
-      // Réinitialiser le formulaire
-      setNumero(generateNumero());
-      setMontantTotal("");
-      setMontantNet("");
-      setBeneficiaires([]);
-
       navigate("/historique");
     } catch (error: any) {
       toast({
@@ -428,436 +363,63 @@ const Saisie = () => {
     (acc, b) => acc + (b.montant || 0),
     0
   );
-  const ecart = (parseFloat(montantNet) || 0) - totalDistribue;
+  const ecart = (affaire?.montant_net || 0) - totalDistribue;
 
   const formatMontant = (montant: number) => {
     return new Intl.NumberFormat("fr-FR").format(montant);
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!affaire) {
+    return null;
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-3xl font-bold text-foreground">
-          Saisie de Répartition
+          Répartition de l'Affaire {affaire.numero}
         </h1>
         <p className="text-muted-foreground mt-2">
-          Créer une nouvelle affaire de répartition de contentieux
+          Effectuer la répartition des bénéficiaires pour cette affaire
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Dossier Contentieux</CardTitle>
+          <CardTitle>Informations de l'affaire</CardTitle>
         </CardHeader>
         <CardContent>
-          <Accordion type="multiple" className="w-full" defaultValue={["section1"]}>
-            {/* Section 1: Informations Générales */}
-            <AccordionItem value="section1">
-              <AccordionTrigger>Informations Générales</AccordionTrigger>
-              <AccordionContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="region">Région</Label>
-                    <Input
-                      id="region"
-                      value={region}
-                      onChange={(e) => setRegion(e.target.value)}
-                      placeholder="Ex: CENTRE-SUD"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="office">Office</Label>
-                    <Input
-                      id="office"
-                      value={office}
-                      onChange={(e) => setOffice(e.target.value)}
-                      placeholder="Ex: DAKOLA"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="numero">N° Affaire *</Label>
-                    <Input
-                      id="numero"
-                      value={numero}
-                      onChange={(e) => setNumero(e.target.value)}
-                      placeholder="Ex: 16/2023"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dateAffaire">Date Affaire *</Label>
-                    <Input
-                      id="dateAffaire"
-                      type="date"
-                      value={dateAffaire}
-                      onChange={(e) => setDateAffaire(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="numDeclaration">N° Déclaration</Label>
-                    <Input
-                      id="numDeclaration"
-                      value={numDeclaration}
-                      onChange={(e) => setNumDeclaration(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dateDeclaration">Date Déclaration</Label>
-                    <Input
-                      id="dateDeclaration"
-                      type="date"
-                      value={dateDeclaration}
-                      onChange={(e) => setDateDeclaration(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="space-y-1">
+              <Label className="text-muted-foreground">N° Affaire</Label>
+              <p className="font-semibold text-lg">{affaire.numero}</p>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-muted-foreground">Date</Label>
+              <p className="font-semibold text-lg">
+                {new Date(affaire.date_affaire).toLocaleDateString("fr-FR")}
+              </p>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-muted-foreground">Montant Net à Répartir</Label>
+              <p className="font-semibold text-lg text-primary">
+                {formatMontant(affaire.montant_net)} FCFA
+              </p>
+            </div>
+          </div>
 
-            {/* Section 2: Informations du Contrevenant */}
-            <AccordionItem value="section2">
-              <AccordionTrigger>Informations du Contrevenant</AccordionTrigger>
-              <AccordionContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="nomPrenomContrevenant">Nom & Prénom Contrevenant</Label>
-                    <Input
-                      id="nomPrenomContrevenant"
-                      value={nomPrenomContrevenant}
-                      onChange={(e) => setNomPrenomContrevenant(e.target.value)}
-                      placeholder="Ex: DIARRA SEKOU"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="adresseComplete">Adresse Complète</Label>
-                    <Input
-                      id="adresseComplete"
-                      value={adresseComplete}
-                      onChange={(e) => setAdresseComplete(e.target.value)}
-                      placeholder="Ex: DAKOLA"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="ifu">IFU</Label>
-                    <Input
-                      id="ifu"
-                      value={ifu}
-                      onChange={(e) => setIfu(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="commissionnaireEnD">Commissionnaire en D</Label>
-                    <Input
-                      id="commissionnaireEnD"
-                      value={commissionnaireEnD}
-                      onChange={(e) => setCommissionnaireEnD(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Section 3: Informations sur le Transport */}
-            <AccordionItem value="section3">
-              <AccordionTrigger>Informations sur le Transport</AccordionTrigger>
-              <AccordionContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="natureEtMoyenDeTransport">Nature et Moyen de Transport</Label>
-                    <Input
-                      id="natureEtMoyenDeTransport"
-                      value={natureEtMoyenDeTransport}
-                      onChange={(e) => setNatureEtMoyenDeTransport(e.target.value)}
-                      placeholder="Ex: vehicule"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="identificationMt">Identification MT</Label>
-                    <Input
-                      id="identificationMt"
-                      value={identificationMt}
-                      onChange={(e) => setIdentificationMt(e.target.value)}
-                      placeholder="Ex: 23 HP 1821 BF"
-                    />
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Section 4: Informations sur les Marchandises */}
-            <AccordionItem value="section4">
-              <AccordionTrigger>Informations sur les Marchandises</AccordionTrigger>
-              <AccordionContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="procedeDeDetection">Procédé de Détection</Label>
-                    <Input
-                      id="procedeDeDetection"
-                      value={procedeDeDetection}
-                      onChange={(e) => setProcedeDeDetection(e.target.value)}
-                      placeholder="Ex: controle routier"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="nombre">Nombre</Label>
-                    <Input
-                      id="nombre"
-                      type="number"
-                      value={nombre}
-                      onChange={(e) => setNombre(e.target.value)}
-                      placeholder="Ex: 200"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="natureMarchandisesFraude">Nature des Marchandises de Fraude</Label>
-                    <Input
-                      id="natureMarchandisesFraude"
-                      value={natureMarchandisesFraude}
-                      onChange={(e) => setNatureMarchandisesFraude(e.target.value)}
-                      placeholder="Ex: BOISSON SUCREE"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="origineOuProvenance">Origine ou Provenance</Label>
-                    <Input
-                      id="origineOuProvenance"
-                      value={origineOuProvenance}
-                      onChange={(e) => setOrigineOuProvenance(e.target.value)}
-                      placeholder="Ex: GHANA"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="valeurMarchandisesLitigieuses">Valeur des Marchandises Litigieuses (FCFA)</Label>
-                    <Input
-                      id="valeurMarchandisesLitigieuses"
-                      type="number"
-                      value={valeurMarchandisesLitigieuses}
-                      onChange={(e) => setValeurMarchandisesLitigieuses(e.target.value)}
-                      placeholder="Ex: 500000"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="suiteReserveeAuxMdses">Suite Réservée aux Marchandises</Label>
-                    <Input
-                      id="suiteReserveeAuxMdses"
-                      value={suiteReserveeAuxMdses}
-                      onChange={(e) => setSuiteReserveeAuxMdses(e.target.value)}
-                      placeholder="Ex: MISE A LA CONSOMMATION"
-                    />
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Section 5: Informations Financières */}
-            <AccordionItem value="section5">
-              <AccordionTrigger>Informations Financières</AccordionTrigger>
-              <AccordionContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="natureDeLInfraction">Nature de l'Infraction</Label>
-                    <Input
-                      id="natureDeLInfraction"
-                      value={natureDeLInfraction}
-                      onChange={(e) => setNatureDeLInfraction(e.target.value)}
-                      placeholder="Ex: ISD/ESD"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="droitsCompromisOuEludes">Droits Compromis ou Eludés (FCFA)</Label>
-                    <Input
-                      id="droitsCompromisOuEludes"
-                      type="number"
-                      value={droitsCompromisOuEludes}
-                      onChange={(e) => setDroitsCompromisOuEludes(e.target.value)}
-                      placeholder="Ex: 250000"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="numQuittanceDce">N° Quittance DCE</Label>
-                    <Input
-                      id="numQuittanceDce"
-                      value={numQuittanceDce}
-                      onChange={(e) => setNumQuittanceDce(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="compositionDossier">Composition Dossier</Label>
-                    <Input
-                      id="compositionDossier"
-                      value={compositionDossier}
-                      onChange={(e) => setCompositionDossier(e.target.value)}
-                      placeholder="Ex: CT8; EDPN"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="montantTotal">Montant Total (FCFA)</Label>
-                    <Input
-                      id="montantTotal"
-                      type="number"
-                      value={montantTotal}
-                      onChange={(e) => setMontantTotal(e.target.value)}
-                      placeholder="1000000"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="montantNet">Produit Net à Répartir (FCFA) *</Label>
-                    <Input
-                      id="montantNet"
-                      type="number"
-                      value={montantNet}
-                      onChange={(e) => setMontantNet(e.target.value)}
-                      placeholder="50000"
-                    />
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Section 6: Informations de Traitement */}
-            <AccordionItem value="section6">
-              <AccordionTrigger>Informations de Traitement</AccordionTrigger>
-              <AccordionContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="nombreInformateurs">Nombre Informateurs</Label>
-                    <Input
-                      id="nombreInformateurs"
-                      type="number"
-                      value={nombreInformateurs}
-                      onChange={(e) => setNombreInformateurs(e.target.value)}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="suiteDeLAffaire">Suite de l'Affaire</Label>
-                    <Input
-                      id="suiteDeLAffaire"
-                      value={suiteDeLAffaire}
-                      onChange={(e) => setSuiteDeLAffaire(e.target.value)}
-                      placeholder="Ex: transaction"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dateDelaTransactionProvisoire">Date de la Transaction Provisoire</Label>
-                    <Input
-                      id="dateDelaTransactionProvisoire"
-                      type="date"
-                      value={dateDelaTransactionProvisoire}
-                      onChange={(e) => setDateDelaTransactionProvisoire(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="montantAmendeOuVente">Montant Amende ou Vente (FCFA)</Label>
-                    <Input
-                      id="montantAmendeOuVente"
-                      type="number"
-                      value={montantAmendeOuVente}
-                      onChange={(e) => setMontantAmendeOuVente(e.target.value)}
-                      placeholder="50000"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="numQuittance">N° Quittance</Label>
-                    <Input
-                      id="numQuittance"
-                      value={numQuittance}
-                      onChange={(e) => setNumQuittance(e.target.value)}
-                      placeholder="Ex: 13804"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dateQuittance">Date Quittance</Label>
-                    <Input
-                      id="dateQuittance"
-                      type="date"
-                      value={dateQuittance}
-                      onChange={(e) => setDateQuittance(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="montantTotalDesFrais">Montant Total des Frais (FCFA)</Label>
-                    <Input
-                      id="montantTotalDesFrais"
-                      type="number"
-                      value={montantTotalDesFrais}
-                      onChange={(e) => setMontantTotalDesFrais(e.target.value)}
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Section 7: Intervenants */}
-            <AccordionItem value="section7">
-              <AccordionTrigger>Intervenants</AccordionTrigger>
-              <AccordionContent>
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="nomsDesChefs">Noms des Chefs</Label>
-                    <Textarea
-                      id="nomsDesChefs"
-                      value={nomsDesChefs}
-                      onChange={(e) => setNomsDesChefs(e.target.value)}
-                      placeholder="Ex: DGD; KOUTOU HAMADOU"
-                      rows={2}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="nomSaisissants">Nom Saisissants</Label>
-                    <Textarea
-                      id="nomSaisissants"
-                      value={nomSaisissants}
-                      onChange={(e) => setNomSaisissants(e.target.value)}
-                      placeholder="Ex: BATIONO MARCELIN; SANOGO YACOUBA"
-                      rows={2}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="nomIntervenants">Nom Intervenants</Label>
-                    <Textarea
-                      id="nomIntervenants"
-                      value={nomIntervenants}
-                      onChange={(e) => setNomIntervenants(e.target.value)}
-                      placeholder="Ex: KIEMA GUY PROSPER"
-                      rows={2}
-                    />
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Section 8: Circonstances et Notes */}
-            <AccordionItem value="section8">
-              <AccordionTrigger>Circonstances et Notes</AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="circonstances">Circonstances</Label>
-                    <Textarea
-                      id="circonstances"
-                      value={circonstances}
-                      onChange={(e) => setCirconstances(e.target.value)}
-                      placeholder="Décrivez les circonstances de l'affaire..."
-                      rows={4}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="notesSupplementaires">Notes Supplémentaires</Label>
-                    <Textarea
-                      id="notesSupplementaires"
-                      value={notesSupplementaires}
-                      onChange={(e) => setNotesSupplementaires(e.target.value)}
-                      placeholder="Notes supplémentaires..."
-                      rows={4}
-                    />
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-
-          <div className="flex items-center justify-between p-4 bg-muted rounded-lg mt-6">
+          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
             <div>
               <span className="font-semibold">Total distribué : </span>
               <span className="text-lg">
@@ -867,7 +429,7 @@ const Saisie = () => {
             <div>
               <span className="font-semibold">Écart : </span>
               <span
-                className={`text-lg ${
+                className={`text-lg font-bold ${
                   ecart === 0
                     ? "text-success"
                     : ecart < 0
@@ -879,6 +441,18 @@ const Saisie = () => {
               </span>
             </div>
           </div>
+
+          {ecart !== 0 && (
+            <div className="flex items-center gap-2 mt-4 p-3 bg-warning/10 border border-warning/20 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-warning" />
+              <p className="text-sm text-warning-foreground">
+                {ecart > 0 
+                  ? `Il reste ${formatMontant(ecart)} FCFA à distribuer`
+                  : `Le total distribué dépasse de ${formatMontant(Math.abs(ecart))} FCFA`
+                }
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -970,7 +544,10 @@ const Saisie = () => {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-3">
+        <Button onClick={() => navigate("/historique")} variant="outline" size="lg">
+          Annuler
+        </Button>
         <Button onClick={enregistrer} size="lg" className="gap-2">
           <Save className="w-5 h-5" />
           Enregistrer la répartition

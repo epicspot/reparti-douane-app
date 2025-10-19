@@ -19,8 +19,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Eye, FileDown, FileSpreadsheet, FileText } from "lucide-react";
+import { Search, Eye, FileDown, FileSpreadsheet, FileText, Edit } from "lucide-react";
 import { exportToPDF, exportToXLSX, exportToCSV } from "@/lib/exportUtils";
+import { useNavigate } from "react-router-dom";
 
 const Historique = () => {
   const [affaires, setAffaires] = useState<any[]>([]);
@@ -34,6 +35,7 @@ const Historique = () => {
   const [beneficiaires, setBeneficiaires] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadHistorique();
@@ -223,38 +225,51 @@ const Historique = () => {
                       {formatMontant(calculerTotalDistribue(affaire))}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => voirBeneficiaires(affaire)}
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        Voir
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleExport(affaire, "pdf")}
-                      >
-                        <FileDown className="w-4 h-4 mr-1" />
-                        PDF
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleExport(affaire, "xlsx")}
-                      >
-                        <FileSpreadsheet className="w-4 h-4 mr-1" />
-                        XLSX
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleExport(affaire, "csv")}
-                      >
-                        <FileText className="w-4 h-4 mr-1" />
-                        CSV
-                      </Button>
+                      {affaire.beneficiaires?.length === 0 ? (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => navigate(`/saisie/${affaire.id}`)}
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Faire la répartition
+                        </Button>
+                      ) : (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => voirBeneficiaires(affaire)}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            Voir
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleExport(affaire, "pdf")}
+                          >
+                            <FileDown className="w-4 h-4 mr-1" />
+                            PDF
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleExport(affaire, "xlsx")}
+                          >
+                            <FileSpreadsheet className="w-4 h-4 mr-1" />
+                            XLSX
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleExport(affaire, "csv")}
+                          >
+                            <FileText className="w-4 h-4 mr-1" />
+                            CSV
+                          </Button>
+                        </>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
