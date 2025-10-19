@@ -117,54 +117,128 @@ const Saisie = () => {
     );
     if (!saisissantsText) return;
 
-    const saisissants = saisissantsText.split(",").map((s) => s.trim());
-    const partSaissants = Math.round(net * 0.4);
-    const partUnitaire = Math.round(partSaissants / saisissants.length);
+    // Demander s'il y a un indicateur
+    const hasIndicateur = confirm("Y a-t-il un indicateur ?");
+    let indicateurNom = "";
+    if (hasIndicateur) {
+      indicateurNom = prompt("Entrez le nom de l'indicateur :") || "";
+      if (!indicateurNom) return;
+    }
 
+    // Demander les intervenants
+    const intervenantsText = prompt(
+      "Entrez les noms des intervenants (séparés par des virgules, ou laissez vide) :"
+    );
+    const intervenants = intervenantsText
+      ? intervenantsText.split(",").map((s) => s.trim())
+      : [];
+
+    const saisissants = saisissantsText.split(",").map((s) => s.trim());
     const newBeneficiaires: Beneficiaire[] = [];
 
-    // Ajouter les saisissants
+    // 1. Part Budget (50%)
+    const partBudget = Math.round(net * 0.5);
+    newBeneficiaires.push({
+      nom: "Part Budget",
+      type: "FONDS",
+      montant: partBudget,
+      pourcentage: 50,
+    });
+
+    // 2. FSP (4%)
+    const partFSP = Math.round(net * 0.04);
+    newBeneficiaires.push({
+      nom: "FSP",
+      type: "FONDS",
+      montant: partFSP,
+      pourcentage: 4,
+    });
+
+    // 3. Part des saisissants (25% répartie intégralement entre les saisissants)
+    const partSaisissants = Math.round(net * 0.25);
+    const partUnitaireSaisissant = Math.round(partSaisissants / saisissants.length);
     saisissants.forEach((nom) => {
       newBeneficiaires.push({
         nom,
         type: "SAISISSANT",
-        montant: partUnitaire,
-        pourcentage: (partUnitaire / net) * 100,
+        montant: partUnitaireSaisissant,
+        pourcentage: (partUnitaireSaisissant / net) * 100,
       });
     });
 
-    // Calculer le résiduel
-    const residuel = net - partSaissants;
-    const totalPoids =
-      chefs.reduce((acc, c) => acc + (c.pourcentage || 0), 0) +
-      fonds.reduce((acc, f) => acc + (f.pourcentage || 0), 0);
+    // 4. Part d'indicateur s'il y a lieu (10%)
+    let partIndicateur = 0;
+    if (hasIndicateur && indicateurNom) {
+      partIndicateur = Math.round(net * 0.1);
+      newBeneficiaires.push({
+        nom: indicateurNom,
+        type: "FONDS",
+        montant: partIndicateur,
+        pourcentage: 10,
+      });
+    }
 
-    if (totalPoids > 0 && residuel > 0) {
-      // Ajouter les chefs
-      chefs.forEach((chef) => {
-        const montant = Math.round(
-          (residuel * (chef.pourcentage || 0)) / totalPoids
-        );
+    // 5. Part des intervenants (égale à la moitié de la part d'un saisissant)
+    let partTotaleIntervenants = 0;
+    if (intervenants.length > 0) {
+      const partUnitaireIntervenant = Math.round(partUnitaireSaisissant / 2);
+      intervenants.forEach((nom) => {
         newBeneficiaires.push({
-          nom: chef.nom,
+          nom,
           type: "CHEF",
-          montant,
-          pourcentage: (montant / net) * 100,
+          montant: partUnitaireIntervenant,
+          pourcentage: (partUnitaireIntervenant / net) * 100,
         });
+        partTotaleIntervenants += partUnitaireIntervenant;
       });
+    }
 
-      // Ajouter les fonds
-      fonds.forEach((fond) => {
-        const montant = Math.round(
-          (residuel * (fond.pourcentage || 0)) / totalPoids
+    // 6. Le reste sera réparti entre les autres fonds
+    const totalDistribue =
+      partBudget +
+      partFSP +
+      partSaisissants +
+      partIndicateur +
+      partTotaleIntervenants;
+    const reste = net - totalDistribue;
+
+    if (reste > 0 && fonds.length > 0) {
+      // Filtrer les fonds qui ne sont pas déjà dans la liste
+      const autresFonds = fonds.filter(
+        (f) => f.nom !== "Part Budget" && f.nom !== "FSP"
+      );
+      
+      if (autresFonds.length > 0) {
+        const totalPoidsAutresFonds = autresFonds.reduce(
+          (acc, f) => acc + (f.pourcentage || 0),
+          0
         );
-        newBeneficiaires.push({
-          nom: fond.nom,
-          type: "FONDS",
-          montant,
-          pourcentage: (montant / net) * 100,
-        });
-      });
+
+        if (totalPoidsAutresFonds > 0) {
+          autresFonds.forEach((fond) => {
+            const montant = Math.round(
+              (reste * (fond.pourcentage || 0)) / totalPoidsAutresFonds
+            );
+            newBeneficiaires.push({
+              nom: fond.nom,
+              type: "FONDS",
+              montant,
+              pourcentage: (montant / net) * 100,
+            });
+          });
+        } else {
+          // Si pas de pondération, répartir équitablement
+          const montantParFond = Math.round(reste / autresFonds.length);
+          autresFonds.forEach((fond) => {
+            newBeneficiaires.push({
+              nom: fond.nom,
+              type: "FONDS",
+              montant: montantParFond,
+              pourcentage: (montantParFond / net) * 100,
+            });
+          });
+        }
+      }
     }
 
     setBeneficiaires(newBeneficiaires);
