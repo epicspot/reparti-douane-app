@@ -356,6 +356,10 @@ const Saisie = () => {
   );
   const ecart = (parseFloat(montantNet) || 0) - totalDistribue;
 
+  const formatMontant = (montant: number) => {
+    return new Intl.NumberFormat("fr-FR").format(montant);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -419,7 +423,7 @@ const Saisie = () => {
             <div>
               <span className="font-semibold">Total distribué : </span>
               <span className="text-lg">
-                {new Intl.NumberFormat("fr-FR").format(totalDistribue)} FCFA
+                {formatMontant(totalDistribue)} FCFA
               </span>
             </div>
             <div>
@@ -433,7 +437,7 @@ const Saisie = () => {
                     : "text-warning"
                 }`}
               >
-                {new Intl.NumberFormat("fr-FR").format(ecart)} FCFA
+                {formatMontant(ecart)} FCFA
               </span>
             </div>
           </div>
@@ -506,17 +510,9 @@ const Saisie = () => {
                       </Select>
                     </TableCell>
                     <TableCell>
-                      <Input
-                        type="number"
-                        value={b.montant}
-                        onChange={(e) =>
-                          modifierBeneficiaire(
-                            index,
-                            "montant",
-                            parseFloat(e.target.value) || 0
-                          )
-                        }
-                      />
+                      <div className="font-medium">
+                        {formatMontant(b.montant)}
+                      </div>
                     </TableCell>
                     <TableCell>{b.pourcentage.toFixed(2)}%</TableCell>
                     <TableCell>
