@@ -29,41 +29,54 @@ export function exportToPDF(affaire: Affaire, beneficiaires: Beneficiaire[], log
     }
   }
   
-  // Titre
-  doc.setFontSize(18);
-  doc.text("RÉPARTITION DE CONTENTIEUX DOUANIERS", 105, logoUrl ? 40 : 20, { align: "center" });
+  // Titre principal
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  const titre = `RÉPARTITION DES AFFAIRES CONTENTIEUSES N° : ${affaire.numero}`;
+  doc.text(titre, 105, logoUrl ? 40 : 20, { align: "center" });
   
-  // Infos affaire
-  doc.setFontSize(12);
+  // Tableau avec le nouveau format
   const startY = logoUrl ? 50 : 30;
-  doc.text(`N° Affaire: ${affaire.numero}`, 20, startY);
-  doc.text(`Date: ${new Date(affaire.date_affaire).toLocaleDateString("fr-FR")}`, 20, startY + 7);
-  doc.text(`Montant Total: ${affaire.montant_total.toLocaleString("fr-FR")} FCFA`, 20, startY + 14);
-  doc.text(`Montant Net: ${affaire.montant_net.toLocaleString("fr-FR")} FCFA`, 20, startY + 21);
-  doc.setFontSize(10);
-  doc.text(`En lettres: ${montantEnLettresCFA(affaire.montant_net)}`, 20, startY + 28);
-  
-  // Tableau bénéficiaires
   const tableData = beneficiaires.map((b) => [
     b.nom,
+    affaire.numero,
+    `${affaire.montant_net.toLocaleString("fr-FR")} FCFA`,
     b.type,
     `${b.montant.toLocaleString("fr-FR")} FCFA`,
-    `${b.pourcentage.toFixed(2)}%`,
+    "", // Colonne signature vide
   ]);
   
   const totalDistribue = beneficiaires.reduce((acc, b) => acc + b.montant, 0);
   
   autoTable(doc, {
-    startY: startY + 35,
-    head: [["Nom", "Type", "Montant", "Pourcentage"]],
+    startY: startY,
+    head: [["AYANT DROIT", "NUMÉRO AFFAIRE", "MONTANT AFFAIRE", "TYPE AYANT DROIT", "MONTANT SAISISSANT", "SIGNATURE"]],
     body: tableData,
     foot: [
-      ["Total distribué", "", `${totalDistribue.toLocaleString("fr-FR")} FCFA`, ""],
-      ["Écart", "", `${(affaire.montant_net - totalDistribue).toLocaleString("fr-FR")} FCFA`, ""],
+      ["TOTAUX DES PARTS", "", "", "", `${totalDistribue.toLocaleString("fr-FR")} FCFA`, ""],
     ],
     theme: "grid",
-    headStyles: { fillColor: [52, 152, 219] },
-    footStyles: { fillColor: [236, 240, 241], textColor: [0, 0, 0], fontStyle: "bold" },
+    headStyles: { 
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      fontStyle: "bold",
+      lineWidth: 0.5,
+      lineColor: [0, 0, 0],
+    },
+    bodyStyles: {
+      lineWidth: 0.5,
+      lineColor: [0, 0, 0],
+    },
+    footStyles: { 
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      fontStyle: "bold",
+      lineWidth: 0.5,
+      lineColor: [0, 0, 0],
+    },
+    columnStyles: {
+      5: { cellWidth: 30 }, // Colonne signature plus large
+    }
   });
   
   doc.save(`${affaire.numero}_repartition.pdf`);
