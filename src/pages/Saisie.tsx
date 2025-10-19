@@ -125,13 +125,17 @@ const Saisie = () => {
       if (!indicateurNom) return;
     }
 
-    // Demander les intervenants
-    const intervenantsText = prompt(
-      "Entrez les noms des intervenants (séparés par des virgules, ou laissez vide) :"
-    );
-    const intervenants = intervenantsText
-      ? intervenantsText.split(",").map((s) => s.trim())
-      : [];
+    // Demander s'il y a des intervenants
+    const hasIntervenants = confirm("Y a-t-il des intervenants ?");
+    let intervenants: string[] = [];
+    if (hasIntervenants) {
+      const intervenantsText = prompt(
+        "Entrez les noms des intervenants (séparés par des virgules) :"
+      );
+      if (intervenantsText) {
+        intervenants = intervenantsText.split(",").map((s) => s.trim());
+      }
+    }
 
     const saisissants = saisissantsText.split(",").map((s) => s.trim());
     const newBeneficiaires: Beneficiaire[] = [];
