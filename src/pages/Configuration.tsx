@@ -13,14 +13,31 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Save } from "lucide-react";
+import { Plus, Trash2, Save, Pencil } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Configuration = () => {
   const [fonds, setFonds] = useState<any[]>([]);
   const [chefs, setChefs] = useState<any[]>([]);
   const [nouveauFond, setNouveauFond] = useState({ nom: "", pourcentage: "" });
   const [nouveauChef, setNouveauChef] = useState({ nom: "", pourcentage: "" });
+  const [editingFond, setEditingFond] = useState<string | null>(null);
+  const [editingChef, setEditingChef] = useState<string | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; type: 'fond' | 'chef' | null; id: string | null }>({
+    open: false,
+    type: null,
+    id: null,
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -106,6 +123,10 @@ const Configuration = () => {
     }
   };
 
+  const confirmDelete = (type: 'fond' | 'chef', id: string) => {
+    setDeleteDialog({ open: true, type, id });
+  };
+
   const supprimerFond = async (id: string) => {
     try {
       const { error } = await supabase.from("fonds").delete().eq("id", id);
@@ -125,6 +146,7 @@ const Configuration = () => {
         variant: "destructive",
       });
     }
+    setDeleteDialog({ open: false, type: null, id: null });
   };
 
   const supprimerChef = async (id: string) => {
@@ -138,6 +160,57 @@ const Configuration = () => {
         description: "Chef supprimé",
       });
 
+      loadConfig();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+    setDeleteDialog({ open: false, type: null, id: null });
+  };
+
+  const modifierNomFond = async (id: string, nom: string) => {
+    try {
+      const { error } = await supabase
+        .from("fonds")
+        .update({ nom })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Nom mis à jour",
+      });
+
+      setEditingFond(null);
+      loadConfig();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const modifierNomChef = async (id: string, nom: string) => {
+    try {
+      const { error } = await supabase
+        .from("chefs")
+        .update({ nom })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Nom mis à jour",
+      });
+
+      setEditingChef(null);
       loadConfig();
     } catch (error: any) {
       toast({
@@ -279,7 +352,7 @@ const Configuration = () => {
                   <TableRow>
                     <TableHead>Nom</TableHead>
                     <TableHead className="w-[150px]">Pourcentage (%)</TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
+                    <TableHead className="w-[120px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -295,7 +368,34 @@ const Configuration = () => {
                   ) : (
                     fonds.map((f) => (
                       <TableRow key={f.id}>
-                        <TableCell>{f.nom}</TableCell>
+                        <TableCell>
+                          {editingFond === f.id ? (
+                            <div className="flex gap-2">
+                              <Input
+                                defaultValue={f.nom}
+                                onBlur={(e) => modifierNomFond(f.id, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    modifierNomFond(f.id, e.currentTarget.value);
+                                  }
+                                }}
+                                autoFocus
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span>{f.nom}</span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => setEditingFond(f.id)}
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <Input
                             type="number"
@@ -314,7 +414,7 @@ const Configuration = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => supprimerFond(f.id)}
+                            onClick={() => confirmDelete('fond', f.id)}
                           >
                             <Trash2 className="w-4 h-4 text-destructive" />
                           </Button>
@@ -387,7 +487,7 @@ const Configuration = () => {
                   <TableRow>
                     <TableHead>Nom</TableHead>
                     <TableHead className="w-[150px]">Pourcentage (%)</TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
+                    <TableHead className="w-[120px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -403,7 +503,34 @@ const Configuration = () => {
                   ) : (
                     chefs.map((c) => (
                       <TableRow key={c.id}>
-                        <TableCell>{c.nom}</TableCell>
+                        <TableCell>
+                          {editingChef === c.id ? (
+                            <div className="flex gap-2">
+                              <Input
+                                defaultValue={c.nom}
+                                onBlur={(e) => modifierNomChef(c.id, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    modifierNomChef(c.id, e.currentTarget.value);
+                                  }
+                                }}
+                                autoFocus
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span>{c.nom}</span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => setEditingChef(c.id)}
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <Input
                             type="number"
@@ -422,7 +549,7 @@ const Configuration = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => supprimerChef(c.id)}
+                            onClick={() => confirmDelete('chef', c.id)}
                           >
                             <Trash2 className="w-4 h-4 text-destructive" />
                           </Button>
@@ -464,6 +591,34 @@ const Configuration = () => {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={deleteDialog.open} onOpenChange={(open) => !open && setDeleteDialog({ open: false, type: null, id: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer ce {deleteDialog.type === 'fond' ? 'fonds' : 'chef'} ? Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteDialog.id) {
+                  if (deleteDialog.type === 'fond') {
+                    supprimerFond(deleteDialog.id);
+                  } else if (deleteDialog.type === 'chef') {
+                    supprimerChef(deleteDialog.id);
+                  }
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
