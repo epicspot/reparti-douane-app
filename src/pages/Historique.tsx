@@ -19,9 +19,19 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Eye, FileDown, FileSpreadsheet, FileText, Edit } from "lucide-react";
+import { Search, Eye, FileDown, FileSpreadsheet, FileText, Edit, Trash2, Pencil } from "lucide-react";
 import { exportToPDF, exportToXLSX, exportToCSV } from "@/lib/exportUtils";
 import { useNavigate } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Historique = () => {
   const [affaires, setAffaires] = useState<any[]>([]);
@@ -34,6 +44,8 @@ const Historique = () => {
   const [selectedAffaire, setSelectedAffaire] = useState<any>(null);
   const [beneficiaires, setBeneficiaires] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [affaireToDelete, setAffaireToDelete] = useState<any>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -135,6 +147,39 @@ const Historique = () => {
     );
   };
 
+  const confirmerSuppression = (affaire: any) => {
+    setAffaireToDelete(affaire);
+    setDeleteDialogOpen(true);
+  };
+
+  const supprimerAffaire = async () => {
+    if (!affaireToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("affaires")
+        .delete()
+        .eq("id", affaireToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "L'affaire a été supprimée avec succès",
+      });
+
+      setDeleteDialogOpen(false);
+      setAffaireToDelete(null);
+      loadHistorique();
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -225,6 +270,22 @@ const Historique = () => {
                       {formatMontant(calculerTotalDistribue(affaire))}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/nouvelle-affaire/${affaire.id}`)}
+                      >
+                        <Pencil className="w-4 h-4 mr-1" />
+                        Modifier
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => confirmerSuppression(affaire)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-1" />
+                        Supprimer
+                      </Button>
                       {affaire.beneficiaires?.length === 0 ? (
                         <Button
                           variant="default"
@@ -341,6 +402,24 @@ const Historique = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer l'affaire {affaireToDelete?.numero} ?
+              Cette action est irréversible et supprimera également tous les bénéficiaires associés.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={supprimerAffaire} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

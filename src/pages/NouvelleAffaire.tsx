@@ -13,9 +13,11 @@ import {
 } from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const NouvelleAffaire = () => {
+  const { id } = useParams();
+  const isEditMode = !!id;
   const [numero, setNumero] = useState("");
   const [dateAffaire, setDateAffaire] = useState(
     new Date().toISOString().split("T")[0]
@@ -68,10 +70,69 @@ const NouvelleAffaire = () => {
   };
 
   useEffect(() => {
-    if (!numero) {
+    if (isEditMode && id) {
+      loadAffaire(id);
+    } else if (!numero) {
       setNumero(generateNumero());
     }
-  }, [dateAffaire]);
+  }, [dateAffaire, id, isEditMode]);
+
+  const loadAffaire = async (affaireId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("affaires")
+        .select("*")
+        .eq("id", affaireId)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setNumero(data.numero);
+        setDateAffaire(data.date_affaire);
+        setMontantTotal(data.montant_total?.toString() || "");
+        setMontantNet(data.montant_net?.toString() || "");
+        setRegion(data.region || "");
+        setOffice(data.office || "");
+        setNumDeclaration(data.num_declaration || "");
+        setDateDeclaration(data.date_declaration || "");
+        setNomPrenomContrevenant(data.nom_prenom_contrevenant || "");
+        setAdresseComplete(data.adresse_complete || "");
+        setIfu(data.ifu || "");
+        setNatureEtMoyenDeTransport(data.nature_et_moyen_de_transport || "");
+        setIdentificationMt(data.identification_mt || "");
+        setCommissionnaireEnD(data.commissionnaire_en_d || "");
+        setProcedeDeDetection(data.procede_de_detection || "");
+        setNombre(data.nombre?.toString() || "");
+        setNatureMarchandisesFraude(data.nature_des_marchandises_de_fraude || "");
+        setOrigineOuProvenance(data.origine_ou_provenance || "");
+        setValeurMarchandisesLitigieuses(data.valeur_des_marchandises_litigieuses?.toString() || "");
+        setNatureDeLInfraction(data.nature_de_l_infraction || "");
+        setDroitsCompromisOuEludes(data.droits_compromis_ou_eludes?.toString() || "");
+        setNumQuittanceDce(data.num_quittance_dce || "");
+        setCompositionDossier(data.composition_dossier || "");
+        setCirconstances(data.circonstances || "");
+        setNombreInformateurs(data.nombre_informateurs?.toString() || "0");
+        setSuiteDeLAffaire(data.suite_de_l_affaire || "");
+        setDateDelaTransactionProvisoire(data.date_de_la_transaction_provisoire || "");
+        setMontantAmendeOuVente(data.montant_amende_ou_vente?.toString() || "");
+        setNumQuittance(data.num_quittance || "");
+        setDateQuittance(data.date_quittance || "");
+        setMontantTotalDesFrais(data.montant_total_des_frais?.toString() || "0");
+        setNomsDesChefs(data.noms_des_chefs || "");
+        setNomSaisissants(data.nom_saisissants || "");
+        setNomIntervenants(data.nom_intervenants || "");
+        setSuiteReserveeAuxMdses(data.suite_reservee_aux_mdses || "");
+        setNotesSupplementaires(data.notes_supplementaires || "");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   const enregistrer = async () => {
     if (!numero || !dateAffaire) {
@@ -84,57 +145,69 @@ const NouvelleAffaire = () => {
     }
 
     try {
-      const { data: affaire, error: affaireError } = await supabase
-        .from("affaires")
-        .insert([
-          {
-            numero,
-            date_affaire: dateAffaire,
-            montant_total: parseFloat(montantTotal) || 0,
-            montant_net: parseFloat(montantNet) || 0,
-            region,
-            office,
-            num_declaration: numDeclaration,
-            date_declaration: dateDeclaration || null,
-            nom_prenom_contrevenant: nomPrenomContrevenant,
-            adresse_complete: adresseComplete,
-            ifu,
-            nature_et_moyen_de_transport: natureEtMoyenDeTransport,
-            identification_mt: identificationMt,
-            commissionnaire_en_d: commissionnaireEnD,
-            procede_de_detection: procedeDeDetection,
-            nombre: parseInt(nombre) || null,
-            nature_des_marchandises_de_fraude: natureMarchandisesFraude,
-            origine_ou_provenance: origineOuProvenance,
-            valeur_des_marchandises_litigieuses: parseInt(valeurMarchandisesLitigieuses) || null,
-            nature_de_l_infraction: natureDeLInfraction,
-            droits_compromis_ou_eludes: parseInt(droitsCompromisOuEludes) || null,
-            num_quittance_dce: numQuittanceDce,
-            composition_dossier: compositionDossier,
-            circonstances,
-            nombre_informateurs: parseInt(nombreInformateurs) || 0,
-            suite_de_l_affaire: suiteDeLAffaire,
-            date_de_la_transaction_provisoire: dateDelaTransactionProvisoire || null,
-            montant_amende_ou_vente: parseInt(montantAmendeOuVente) || null,
-            num_quittance: numQuittance,
-            date_quittance: dateQuittance || null,
-            montant_total_des_frais: parseInt(montantTotalDesFrais) || 0,
-            noms_des_chefs: nomsDesChefs,
-            nom_saisissants: nomSaisissants,
-            nom_intervenants: nomIntervenants,
-            suite_reservee_aux_mdses: suiteReserveeAuxMdses,
-            notes_supplementaires: notesSupplementaires,
-          },
-        ])
-        .select()
-        .single();
+      const affaireData = {
+        numero,
+        date_affaire: dateAffaire,
+        montant_total: parseFloat(montantTotal) || 0,
+        montant_net: parseFloat(montantNet) || 0,
+        region,
+        office,
+        num_declaration: numDeclaration,
+        date_declaration: dateDeclaration || null,
+        nom_prenom_contrevenant: nomPrenomContrevenant,
+        adresse_complete: adresseComplete,
+        ifu,
+        nature_et_moyen_de_transport: natureEtMoyenDeTransport,
+        identification_mt: identificationMt,
+        commissionnaire_en_d: commissionnaireEnD,
+        procede_de_detection: procedeDeDetection,
+        nombre: parseInt(nombre) || null,
+        nature_des_marchandises_de_fraude: natureMarchandisesFraude,
+        origine_ou_provenance: origineOuProvenance,
+        valeur_des_marchandises_litigieuses: parseInt(valeurMarchandisesLitigieuses) || null,
+        nature_de_l_infraction: natureDeLInfraction,
+        droits_compromis_ou_eludes: parseInt(droitsCompromisOuEludes) || null,
+        num_quittance_dce: numQuittanceDce,
+        composition_dossier: compositionDossier,
+        circonstances,
+        nombre_informateurs: parseInt(nombreInformateurs) || 0,
+        suite_de_l_affaire: suiteDeLAffaire,
+        date_de_la_transaction_provisoire: dateDelaTransactionProvisoire || null,
+        montant_amende_ou_vente: parseInt(montantAmendeOuVente) || null,
+        num_quittance: numQuittance,
+        date_quittance: dateQuittance || null,
+        montant_total_des_frais: parseInt(montantTotalDesFrais) || 0,
+        noms_des_chefs: nomsDesChefs,
+        nom_saisissants: nomSaisissants,
+        nom_intervenants: nomIntervenants,
+        suite_reservee_aux_mdses: suiteReserveeAuxMdses,
+        notes_supplementaires: notesSupplementaires,
+      };
 
-      if (affaireError) throw affaireError;
+      if (isEditMode && id) {
+        const { error: updateError } = await supabase
+          .from("affaires")
+          .update(affaireData)
+          .eq("id", id);
 
-      toast({
-        title: "Succès",
-        description: "L'affaire a été créée avec succès",
-      });
+        if (updateError) throw updateError;
+
+        toast({
+          title: "Succès",
+          description: "L'affaire a été modifiée avec succès",
+        });
+      } else {
+        const { error: insertError } = await supabase
+          .from("affaires")
+          .insert([affaireData]);
+
+        if (insertError) throw insertError;
+
+        toast({
+          title: "Succès",
+          description: "L'affaire a été créée avec succès",
+        });
+      }
 
       navigate("/historique");
     } catch (error: any) {
@@ -150,10 +223,10 @@ const NouvelleAffaire = () => {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-3xl font-bold text-foreground">
-          Nouvelle Affaire Contentieuse
+          {isEditMode ? "Modifier l'Affaire" : "Nouvelle Affaire Contentieuse"}
         </h1>
         <p className="text-muted-foreground mt-2">
-          Créer un nouveau dossier d'affaire contentieuse
+          {isEditMode ? "Modifier le dossier d'affaire contentieuse" : "Créer un nouveau dossier d'affaire contentieuse"}
         </p>
       </div>
 
