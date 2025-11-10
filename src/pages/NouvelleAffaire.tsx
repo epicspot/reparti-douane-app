@@ -221,25 +221,27 @@ const NouvelleAffaire = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">
+      <div className="bg-gradient-primary text-primary-foreground rounded-lg p-6 shadow-elegant">
+        <h1 className="text-3xl font-bold">
           {isEditMode ? "Modifier l'Affaire" : "Nouvelle Affaire Contentieuse"}
         </h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="mt-2 opacity-90">
           {isEditMode ? "Modifier le dossier d'affaire contentieuse" : "Créer un nouveau dossier d'affaire contentieuse"}
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Dossier Contentieux</CardTitle>
+      <Card className="shadow-soft border-border/50">
+        <CardHeader className="bg-gradient-subtle">
+          <CardTitle className="text-primary">Dossier Contentieux</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <Accordion type="multiple" className="w-full" defaultValue={["section1"]}>
             {/* Section 1: Informations Générales */}
-            <AccordionItem value="section1">
-              <AccordionTrigger>Informations Générales *</AccordionTrigger>
-              <AccordionContent>
+            <AccordionItem value="section1" className="border-primary/20">
+              <AccordionTrigger className="text-primary hover:text-primary/80">
+                Informations Générales *
+              </AccordionTrigger>
+              <AccordionContent className="bg-gradient-subtle pt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="region">Région</Label>
@@ -299,9 +301,11 @@ const NouvelleAffaire = () => {
             </AccordionItem>
 
             {/* Section 2: Informations du Contrevenant */}
-            <AccordionItem value="section2">
-              <AccordionTrigger>Informations du Contrevenant</AccordionTrigger>
-              <AccordionContent>
+            <AccordionItem value="section2" className="border-accent/20">
+              <AccordionTrigger className="text-accent hover:text-accent/80">
+                Informations du Contrevenant
+              </AccordionTrigger>
+              <AccordionContent className="bg-gradient-subtle pt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="nomPrenomContrevenant">Nom & Prénom Contrevenant</Label>
@@ -342,9 +346,11 @@ const NouvelleAffaire = () => {
             </AccordionItem>
 
             {/* Section 3: Informations sur le Transport */}
-            <AccordionItem value="section3">
-              <AccordionTrigger>Informations sur le Transport</AccordionTrigger>
-              <AccordionContent>
+            <AccordionItem value="section3" className="border-info/20">
+              <AccordionTrigger className="text-info hover:text-info/80">
+                Informations sur le Transport
+              </AccordionTrigger>
+              <AccordionContent className="bg-gradient-subtle pt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="natureEtMoyenDeTransport">Nature et Moyen de Transport</Label>
@@ -369,9 +375,11 @@ const NouvelleAffaire = () => {
             </AccordionItem>
 
             {/* Section 4: Informations sur les Marchandises */}
-            <AccordionItem value="section4">
-              <AccordionTrigger>Informations sur les Marchandises</AccordionTrigger>
-              <AccordionContent>
+            <AccordionItem value="section4" className="border-success/20">
+              <AccordionTrigger className="text-success hover:text-success/80">
+                Informations sur les Marchandises
+              </AccordionTrigger>
+              <AccordionContent className="bg-gradient-subtle pt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="procedeDeDetection">Procédé de Détection</Label>
@@ -434,9 +442,11 @@ const NouvelleAffaire = () => {
             </AccordionItem>
 
             {/* Section 5: Informations Financières */}
-            <AccordionItem value="section5">
-              <AccordionTrigger>Informations Financières</AccordionTrigger>
-              <AccordionContent>
+            <AccordionItem value="section5" className="border-warning/20">
+              <AccordionTrigger className="text-warning hover:text-warning/80">
+                Informations Financières
+              </AccordionTrigger>
+              <AccordionContent className="bg-gradient-subtle pt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="natureDeLInfraction">Nature de l'Infraction</Label>
@@ -499,9 +509,11 @@ const NouvelleAffaire = () => {
             </AccordionItem>
 
             {/* Section 6: Informations de Traitement */}
-            <AccordionItem value="section6">
-              <AccordionTrigger>Informations de Traitement</AccordionTrigger>
-              <AccordionContent>
+            <AccordionItem value="section6" className="border-primary/20">
+              <AccordionTrigger className="text-primary hover:text-primary/80">
+                Informations de Traitement
+              </AccordionTrigger>
+              <AccordionContent className="bg-gradient-subtle pt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="nombreInformateurs">Nombre Informateurs</Label>
@@ -574,9 +586,11 @@ const NouvelleAffaire = () => {
             </AccordionItem>
 
             {/* Section 7: Intervenants */}
-            <AccordionItem value="section7">
-              <AccordionTrigger>Intervenants</AccordionTrigger>
-              <AccordionContent>
+            <AccordionItem value="section7" className="border-accent/20">
+              <AccordionTrigger className="text-accent hover:text-accent/80">
+                Intervenants
+              </AccordionTrigger>
+              <AccordionContent className="bg-gradient-subtle pt-4">
                 <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="nomsDesChefs">Noms des Chefs</Label>
@@ -613,9 +627,11 @@ const NouvelleAffaire = () => {
             </AccordionItem>
 
             {/* Section 8: Circonstances et Notes */}
-            <AccordionItem value="section8">
-              <AccordionTrigger>Circonstances et Notes</AccordionTrigger>
-              <AccordionContent>
+            <AccordionItem value="section8" className="border-info/20">
+              <AccordionTrigger className="text-info hover:text-info/80">
+                Circonstances et Notes
+              </AccordionTrigger>
+              <AccordionContent className="bg-gradient-subtle pt-4">
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="circonstances">Circonstances</Label>
@@ -645,9 +661,9 @@ const NouvelleAffaire = () => {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={enregistrer} size="lg" className="gap-2">
+        <Button onClick={enregistrer} size="lg" className="gap-2 bg-gradient-primary shadow-elegant hover:shadow-soft transition-all">
           <Save className="w-5 h-5" />
-          Créer l'affaire
+          {isEditMode ? "Enregistrer les modifications" : "Créer l'affaire"}
         </Button>
       </div>
     </div>
