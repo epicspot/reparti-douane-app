@@ -273,6 +273,14 @@ const Historique = () => {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => navigate(`/affaire/${affaire.id}`)}
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        Détails
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => navigate(`/nouvelle-affaire/${affaire.id}`)}
                       >
                         <Pencil className="w-4 h-4 mr-1" />
