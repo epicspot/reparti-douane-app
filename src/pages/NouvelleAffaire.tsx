@@ -202,18 +202,32 @@ const NouvelleAffaire = () => {
         });
       } else {
         // En mode création, le numéro sera généré automatiquement par le trigger
-        const { data: newAffaire, error: insertError } = await supabase
-          .from("affaires")
-          .insert([affaireData])
-          .select()
-          .single();
+        try {
+          const { data: newAffaire, error: insertError } = await supabase
+            .from("affaires")
+            .insert([affaireData])
+            .select()
+            .single();
 
-        if (insertError) throw insertError;
+          if (insertError) throw insertError;
 
-        toast({
-          title: "Succès",
-          description: `L'affaire ${newAffaire.numero} a été créée avec succès`,
-        });
+          toast({
+            title: "Succès",
+            description: `L'affaire ${newAffaire.numero} a été créée avec succès`,
+          });
+        } catch (innerError: any) {
+          // Gérer l'erreur de contrainte d'unicité
+          if (innerError.message?.includes('unique_numero_dossier_par_office_et_annee')) {
+            toast({
+              title: "Erreur",
+              description: "Ce numéro de dossier office existe déjà pour cet office cette année",
+              variant: "destructive",
+            });
+            return;
+          } else {
+            throw innerError;
+          }
+        }
       }
 
       navigate("/historique");
@@ -282,22 +296,16 @@ const NouvelleAffaire = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="numeroDossierOffice">
-                      N° Dossier Office {isEditMode ? "" : "(Auto)"}
-                    </Label>
+                    <Label htmlFor="numeroDossierOffice">N° Dossier Office</Label>
                     <Input
                       id="numeroDossierOffice"
-                      value={isEditMode ? numeroDossierOffice : "Généré automatiquement"}
-                      onChange={(e) => isEditMode && setNumeroDossierOffice(e.target.value)}
-                      placeholder={isEditMode ? "Ex: 2025/001" : "Format personnalisable"}
-                      disabled={!isEditMode}
-                      className={!isEditMode ? "bg-muted/50 cursor-not-allowed" : ""}
+                      value={numeroDossierOffice}
+                      onChange={(e) => setNumeroDossierOffice(e.target.value)}
+                      placeholder="Ex: 2025/001"
                     />
-                    {!isEditMode && (
-                      <p className="text-xs text-muted-foreground">
-                        Le format est configurable dans Configuration
-                      </p>
-                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Doit être unique dans l'année pour cet office
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="numero">
