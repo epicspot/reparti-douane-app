@@ -61,21 +61,11 @@ const NouvelleAffaire = () => {
   const [suiteReserveeAuxMdses, setSuiteReserveeAuxMdses] = useState("");
   const [notesSupplementaires, setNotesSupplementaires] = useState("");
 
-  const generateNumero = () => {
-    const year = new Date(dateAffaire).getFullYear();
-    const random = Math.floor(Math.random() * 1000)
-      .toString()
-      .padStart(3, "0");
-    return `${random}/${year}`;
-  };
-
   useEffect(() => {
     if (isEditMode && id) {
       loadAffaire(id);
-    } else if (!numero) {
-      setNumero(generateNumero());
     }
-  }, [dateAffaire, id, isEditMode]);
+  }, [id, isEditMode]);
 
   const loadAffaire = async (affaireId: string) => {
     try {
@@ -135,18 +125,17 @@ const NouvelleAffaire = () => {
   };
 
   const enregistrer = async () => {
-    if (!numero || !dateAffaire) {
+    if (!dateAffaire || !office) {
       toast({
         title: "Erreur",
-        description: "Veuillez remplir les champs obligatoires (N° Affaire et Date)",
+        description: "Veuillez remplir les champs obligatoires (Office et Date)",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      const affaireData = {
-        numero,
+      const affaireData: any = {
         date_affaire: dateAffaire,
         montant_total: parseFloat(montantTotal) || 0,
         montant_net: parseFloat(montantNet) || 0,
@@ -185,6 +174,9 @@ const NouvelleAffaire = () => {
       };
 
       if (isEditMode && id) {
+        // En mode édition, on inclut le numéro
+        affaireData.numero = numero;
+        
         const { error: updateError } = await supabase
           .from("affaires")
           .update(affaireData)
@@ -197,15 +189,18 @@ const NouvelleAffaire = () => {
           description: "L'affaire a été modifiée avec succès",
         });
       } else {
-        const { error: insertError } = await supabase
+        // En mode création, le numéro sera généré automatiquement par le trigger
+        const { data: newAffaire, error: insertError } = await supabase
           .from("affaires")
-          .insert([affaireData]);
+          .insert([affaireData])
+          .select()
+          .single();
 
         if (insertError) throw insertError;
 
         toast({
           title: "Succès",
-          description: "L'affaire a été créée avec succès",
+          description: `L'affaire ${newAffaire.numero} a été créée avec succès`,
         });
       }
 
@@ -253,22 +248,32 @@ const NouvelleAffaire = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="office">Office</Label>
+                    <Label htmlFor="office">Office *</Label>
                     <Input
                       id="office"
                       value={office}
                       onChange={(e) => setOffice(e.target.value)}
                       placeholder="Ex: DAKOLA"
+                      required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="numero">N° Affaire *</Label>
+                    <Label htmlFor="numero">
+                      N° Affaire {isEditMode ? "*" : "(Auto)"}
+                    </Label>
                     <Input
                       id="numero"
-                      value={numero}
-                      onChange={(e) => setNumero(e.target.value)}
-                      placeholder="Ex: 16/2023"
+                      value={isEditMode ? numero : "Généré automatiquement"}
+                      onChange={(e) => isEditMode && setNumero(e.target.value)}
+                      placeholder={isEditMode ? "Ex: DAKOLA-2025-001" : "Format: OFFICE-ANNÉE-XXX"}
+                      disabled={!isEditMode}
+                      className={!isEditMode ? "bg-muted/50 cursor-not-allowed" : ""}
                     />
+                    {!isEditMode && (
+                      <p className="text-xs text-muted-foreground">
+                        Le numéro sera généré automatiquement au format OFFICE-ANNÉE-XXX
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="dateAffaire">Date Affaire *</Label>
