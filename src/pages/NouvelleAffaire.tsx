@@ -5,19 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
-import { Save } from "lucide-react";
+import { Save, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
 const NouvelleAffaire = () => {
   const { id } = useParams();
   const isEditMode = !!id;
+  const [currentStep, setCurrentStep] = useState(0);
   const [numero, setNumero] = useState("");
   const [dateAffaire, setDateAffaire] = useState(
     new Date().toISOString().split("T")[0]
@@ -124,6 +119,20 @@ const NouvelleAffaire = () => {
     }
   };
 
+  const totalSteps = 8;
+
+  const nextStep = () => {
+    if (currentStep < totalSteps - 1) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
   const enregistrer = async () => {
     if (!dateAffaire || !office) {
       toast({
@@ -227,16 +236,28 @@ const NouvelleAffaire = () => {
 
       <Card className="shadow-soft border-border/50">
         <CardHeader className="bg-gradient-subtle">
-          <CardTitle className="text-primary">Dossier Contentieux</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-primary">Dossier Contentieux</CardTitle>
+            <div className="text-sm text-muted-foreground">
+              Étape {currentStep + 1} sur {totalSteps}
+            </div>
+          </div>
+          <div className="mt-4 flex gap-1">
+            {Array.from({ length: totalSteps }).map((_, index) => (
+              <div
+                key={index}
+                className={`h-2 flex-1 rounded-full transition-all ${
+                  index <= currentStep ? "bg-primary" : "bg-muted"
+                }`}
+              />
+            ))}
+          </div>
         </CardHeader>
         <CardContent className="pt-6">
-          <Accordion type="multiple" className="w-full" defaultValue={["section1"]}>
-            {/* Section 1: Informations Générales */}
-            <AccordionItem value="section1" className="border-primary/20">
-              <AccordionTrigger className="text-primary hover:text-primary/80">
-                Informations Générales *
-              </AccordionTrigger>
-              <AccordionContent className="bg-gradient-subtle pt-4">
+          {/* Section 1: Informations Générales */}
+          {currentStep === 0 && (
+            <div className="space-y-6 animate-fade-in">
+              <h3 className="text-xl font-semibold text-primary">Informations Générales *</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="region">Région</Label>
@@ -302,15 +323,13 @@ const NouvelleAffaire = () => {
                     />
                   </div>
                 </div>
-              </AccordionContent>
-            </AccordionItem>
+              </div>
+            )}
 
             {/* Section 2: Informations du Contrevenant */}
-            <AccordionItem value="section2" className="border-accent/20">
-              <AccordionTrigger className="text-accent hover:text-accent/80">
-                Informations du Contrevenant
-              </AccordionTrigger>
-              <AccordionContent className="bg-gradient-subtle pt-4">
+          {currentStep === 1 && (
+            <div className="space-y-6 animate-fade-in">
+              <h3 className="text-xl font-semibold text-accent">Informations du Contrevenant</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="nomPrenomContrevenant">Nom & Prénom Contrevenant</Label>
@@ -347,15 +366,13 @@ const NouvelleAffaire = () => {
                     />
                   </div>
                 </div>
-              </AccordionContent>
-            </AccordionItem>
+              </div>
+            )}
 
             {/* Section 3: Informations sur le Transport */}
-            <AccordionItem value="section3" className="border-info/20">
-              <AccordionTrigger className="text-info hover:text-info/80">
-                Informations sur le Transport
-              </AccordionTrigger>
-              <AccordionContent className="bg-gradient-subtle pt-4">
+          {currentStep === 2 && (
+            <div className="space-y-6 animate-fade-in">
+              <h3 className="text-xl font-semibold text-info">Informations sur le Transport</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="natureEtMoyenDeTransport">Nature et Moyen de Transport</Label>
@@ -376,15 +393,13 @@ const NouvelleAffaire = () => {
                     />
                   </div>
                 </div>
-              </AccordionContent>
-            </AccordionItem>
+              </div>
+            )}
 
             {/* Section 4: Informations sur les Marchandises */}
-            <AccordionItem value="section4" className="border-success/20">
-              <AccordionTrigger className="text-success hover:text-success/80">
-                Informations sur les Marchandises
-              </AccordionTrigger>
-              <AccordionContent className="bg-gradient-subtle pt-4">
+          {currentStep === 3 && (
+            <div className="space-y-6 animate-fade-in">
+              <h3 className="text-xl font-semibold text-success">Informations sur les Marchandises</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="procedeDeDetection">Procédé de Détection</Label>
@@ -443,15 +458,13 @@ const NouvelleAffaire = () => {
                     />
                   </div>
                 </div>
-              </AccordionContent>
-            </AccordionItem>
+              </div>
+            )}
 
             {/* Section 5: Informations Financières */}
-            <AccordionItem value="section5" className="border-warning/20">
-              <AccordionTrigger className="text-warning hover:text-warning/80">
-                Informations Financières
-              </AccordionTrigger>
-              <AccordionContent className="bg-gradient-subtle pt-4">
+          {currentStep === 4 && (
+            <div className="space-y-6 animate-fade-in">
+              <h3 className="text-xl font-semibold text-warning">Informations Financières</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="natureDeLInfraction">Nature de l'Infraction</Label>
@@ -510,15 +523,13 @@ const NouvelleAffaire = () => {
                     />
                   </div>
                 </div>
-              </AccordionContent>
-            </AccordionItem>
+              </div>
+            )}
 
             {/* Section 6: Informations de Traitement */}
-            <AccordionItem value="section6" className="border-primary/20">
-              <AccordionTrigger className="text-primary hover:text-primary/80">
-                Informations de Traitement
-              </AccordionTrigger>
-              <AccordionContent className="bg-gradient-subtle pt-4">
+          {currentStep === 5 && (
+            <div className="space-y-6 animate-fade-in">
+              <h3 className="text-xl font-semibold text-primary">Informations de Traitement</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="nombreInformateurs">Nombre Informateurs</Label>
@@ -587,15 +598,13 @@ const NouvelleAffaire = () => {
                     />
                   </div>
                 </div>
-              </AccordionContent>
-            </AccordionItem>
+              </div>
+            )}
 
             {/* Section 7: Intervenants */}
-            <AccordionItem value="section7" className="border-accent/20">
-              <AccordionTrigger className="text-accent hover:text-accent/80">
-                Intervenants
-              </AccordionTrigger>
-              <AccordionContent className="bg-gradient-subtle pt-4">
+          {currentStep === 6 && (
+            <div className="space-y-6 animate-fade-in">
+              <h3 className="text-xl font-semibold text-accent">Intervenants</h3>
                 <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="nomsDesChefs">Noms des Chefs</Label>
@@ -628,15 +637,13 @@ const NouvelleAffaire = () => {
                     />
                   </div>
                 </div>
-              </AccordionContent>
-            </AccordionItem>
+              </div>
+            )}
 
             {/* Section 8: Circonstances et Notes */}
-            <AccordionItem value="section8" className="border-info/20">
-              <AccordionTrigger className="text-info hover:text-info/80">
-                Circonstances et Notes
-              </AccordionTrigger>
-              <AccordionContent className="bg-gradient-subtle pt-4">
+          {currentStep === 7 && (
+            <div className="space-y-6 animate-fade-in">
+              <h3 className="text-xl font-semibold text-info">Circonstances et Notes</h3>
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="circonstances">Circonstances</Label>
@@ -659,18 +666,35 @@ const NouvelleAffaire = () => {
                     />
                   </div>
                 </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+              </div>
+            )}
+
+            {/* Navigation Buttons */}
+          <div className="flex justify-between items-center pt-6 mt-6 border-t">
+            <Button
+              variant="outline"
+              onClick={prevStep}
+              disabled={currentStep === 0}
+              className="gap-2"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Précédent
+            </Button>
+            
+            {currentStep < totalSteps - 1 ? (
+              <Button onClick={nextStep} className="gap-2">
+                Suivant
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button onClick={enregistrer} size="lg" className="gap-2 bg-gradient-primary shadow-elegant hover:shadow-soft transition-all">
+                <Save className="w-5 h-5" />
+                {isEditMode ? "Enregistrer les modifications" : "Créer l'affaire"}
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
-
-      <div className="flex justify-end">
-        <Button onClick={enregistrer} size="lg" className="gap-2 bg-gradient-primary shadow-elegant hover:shadow-soft transition-all">
-          <Save className="w-5 h-5" />
-          {isEditMode ? "Enregistrer les modifications" : "Créer l'affaire"}
-        </Button>
-      </div>
     </div>
   );
 };
