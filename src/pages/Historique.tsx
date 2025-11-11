@@ -41,6 +41,7 @@ const Historique = () => {
     return date.toISOString().split("T")[0];
   });
   const [dateFin, setDateFin] = useState(new Date().toISOString().split("T")[0]);
+  const [numeroDossierRecherche, setNumeroDossierRecherche] = useState("");
   const [selectedAffaire, setSelectedAffaire] = useState<any>(null);
   const [beneficiaires, setBeneficiaires] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -75,7 +76,7 @@ const Historique = () => {
 
   const loadHistorique = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("affaires")
         .select(
           `
@@ -90,8 +91,14 @@ const Historique = () => {
         `
         )
         .gte("date_affaire", dateDebut)
-        .lte("date_affaire", dateFin)
-        .order("date_affaire", { ascending: false });
+        .lte("date_affaire", dateFin);
+
+      // Ajouter le filtre par numéro de dossier si saisi
+      if (numeroDossierRecherche.trim()) {
+        query = query.ilike("numero_dossier_office", `%${numeroDossierRecherche.trim()}%`);
+      }
+
+      const { data, error } = await query.order("date_affaire", { ascending: false });
 
       if (error) throw error;
       setAffaires(data || []);
@@ -235,6 +242,16 @@ const Historique = () => {
                 onChange={(e) => setDateFin(e.target.value)}
               />
             </div>
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="numeroDossier">N° Dossier Office</Label>
+              <Input
+                id="numeroDossier"
+                type="text"
+                value={numeroDossierRecherche}
+                onChange={(e) => setNumeroDossierRecherche(e.target.value)}
+                placeholder="Ex: 2025/001"
+              />
+            </div>
             <div className="flex items-end">
               <Button onClick={loadHistorique} className="gap-2">
                 <Search className="w-4 h-4" />
@@ -256,6 +273,7 @@ const Historique = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>N° Affaire</TableHead>
+                <TableHead>N° Dossier Office</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Montant Total</TableHead>
                 <TableHead>Montant Net</TableHead>
@@ -267,7 +285,7 @@ const Historique = () => {
               {affaires.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="text-center text-muted-foreground py-8"
                   >
                     Aucune affaire trouvée pour cette période
@@ -278,6 +296,9 @@ const Historique = () => {
                   <TableRow key={affaire.id}>
                     <TableCell className="font-medium">
                       {affaire.numero}
+                    </TableCell>
+                    <TableCell className="font-medium text-accent">
+                      {affaire.numero_dossier_office || "-"}
                     </TableCell>
                     <TableCell>
                       {new Date(affaire.date_affaire).toLocaleDateString(
