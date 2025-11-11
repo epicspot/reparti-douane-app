@@ -119,7 +119,7 @@ const NouvelleAffaire = () => {
     }
   };
 
-  const totalSteps = 8;
+  const totalSteps = 9;
 
   const nextStep = () => {
     if (currentStep < totalSteps - 1) {
@@ -668,6 +668,160 @@ const NouvelleAffaire = () => {
                 </div>
               </div>
             )}
+
+            {/* Section 9: Récapitulatif */}
+          {currentStep === 8 && (
+            <div className="space-y-6 animate-fade-in">
+              <h3 className="text-xl font-semibold text-primary">Récapitulatif de l'Affaire</h3>
+              <p className="text-muted-foreground">Veuillez vérifier toutes les informations avant l'enregistrement.</p>
+              
+              {/* Informations Générales */}
+              <Card className="border-primary/20">
+                <CardHeader className="bg-gradient-subtle">
+                  <CardTitle className="text-lg text-primary">Informations Générales</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {region && <div><span className="font-semibold">Région:</span> {region}</div>}
+                    {office && <div><span className="font-semibold">Office:</span> {office}</div>}
+                    {isEditMode && numero && <div><span className="font-semibold">N° Affaire:</span> {numero}</div>}
+                    {dateAffaire && <div><span className="font-semibold">Date Affaire:</span> {new Date(dateAffaire).toLocaleDateString('fr-FR')}</div>}
+                    {numDeclaration && <div><span className="font-semibold">N° Déclaration:</span> {numDeclaration}</div>}
+                    {dateDeclaration && <div><span className="font-semibold">Date Déclaration:</span> {new Date(dateDeclaration).toLocaleDateString('fr-FR')}</div>}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Contrevenant */}
+              {(nomPrenomContrevenant || adresseComplete || ifu || commissionnaireEnD) && (
+                <Card className="border-accent/20">
+                  <CardHeader className="bg-gradient-subtle">
+                    <CardTitle className="text-lg text-accent">Contrevenant</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      {nomPrenomContrevenant && <div><span className="font-semibold">Nom & Prénom:</span> {nomPrenomContrevenant}</div>}
+                      {adresseComplete && <div><span className="font-semibold">Adresse:</span> {adresseComplete}</div>}
+                      {ifu && <div><span className="font-semibold">IFU:</span> {ifu}</div>}
+                      {commissionnaireEnD && <div><span className="font-semibold">Commissionnaire en D:</span> {commissionnaireEnD}</div>}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Transport */}
+              {(natureEtMoyenDeTransport || identificationMt) && (
+                <Card className="border-info/20">
+                  <CardHeader className="bg-gradient-subtle">
+                    <CardTitle className="text-lg text-info">Transport</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      {natureEtMoyenDeTransport && <div><span className="font-semibold">Nature et Moyen:</span> {natureEtMoyenDeTransport}</div>}
+                      {identificationMt && <div><span className="font-semibold">Identification MT:</span> {identificationMt}</div>}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Marchandises */}
+              {(procedeDeDetection || nombre || natureMarchandisesFraude || origineOuProvenance || valeurMarchandisesLitigieuses || suiteReserveeAuxMdses) && (
+                <Card className="border-success/20">
+                  <CardHeader className="bg-gradient-subtle">
+                    <CardTitle className="text-lg text-success">Marchandises</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      {procedeDeDetection && <div><span className="font-semibold">Procédé de Détection:</span> {procedeDeDetection}</div>}
+                      {nombre && <div><span className="font-semibold">Nombre:</span> {nombre}</div>}
+                      {natureMarchandisesFraude && <div><span className="font-semibold">Nature:</span> {natureMarchandisesFraude}</div>}
+                      {origineOuProvenance && <div><span className="font-semibold">Origine:</span> {origineOuProvenance}</div>}
+                      {valeurMarchandisesLitigieuses && <div><span className="font-semibold">Valeur:</span> {parseInt(valeurMarchandisesLitigieuses).toLocaleString('fr-FR')} FCFA</div>}
+                      {suiteReserveeAuxMdses && <div><span className="font-semibold">Suite Réservée:</span> {suiteReserveeAuxMdses}</div>}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Informations Financières */}
+              <Card className="border-warning/20">
+                <CardHeader className="bg-gradient-subtle">
+                  <CardTitle className="text-lg text-warning">Informations Financières</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {natureDeLInfraction && <div><span className="font-semibold">Nature de l'Infraction:</span> {natureDeLInfraction}</div>}
+                    {droitsCompromisOuEludes && <div><span className="font-semibold">Droits Compromis:</span> {parseInt(droitsCompromisOuEludes).toLocaleString('fr-FR')} FCFA</div>}
+                    {numQuittanceDce && <div><span className="font-semibold">N° Quittance DCE:</span> {numQuittanceDce}</div>}
+                    {compositionDossier && <div><span className="font-semibold">Composition Dossier:</span> {compositionDossier}</div>}
+                    {montantTotal && <div><span className="font-semibold">Montant Total:</span> {parseInt(montantTotal).toLocaleString('fr-FR')} FCFA</div>}
+                    {montantNet && <div><span className="font-semibold">Produit Net:</span> {parseInt(montantNet).toLocaleString('fr-FR')} FCFA</div>}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Traitement */}
+              {(nombreInformateurs || suiteDeLAffaire || dateDelaTransactionProvisoire || montantAmendeOuVente || numQuittance || dateQuittance || montantTotalDesFrais) && (
+                <Card className="border-primary/20">
+                  <CardHeader className="bg-gradient-subtle">
+                    <CardTitle className="text-lg text-primary">Traitement</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      {nombreInformateurs !== "0" && <div><span className="font-semibold">Nombre Informateurs:</span> {nombreInformateurs}</div>}
+                      {suiteDeLAffaire && <div><span className="font-semibold">Suite de l'Affaire:</span> {suiteDeLAffaire}</div>}
+                      {dateDelaTransactionProvisoire && <div><span className="font-semibold">Date Transaction:</span> {new Date(dateDelaTransactionProvisoire).toLocaleDateString('fr-FR')}</div>}
+                      {montantAmendeOuVente && <div><span className="font-semibold">Montant Amende/Vente:</span> {parseInt(montantAmendeOuVente).toLocaleString('fr-FR')} FCFA</div>}
+                      {numQuittance && <div><span className="font-semibold">N° Quittance:</span> {numQuittance}</div>}
+                      {dateQuittance && <div><span className="font-semibold">Date Quittance:</span> {new Date(dateQuittance).toLocaleDateString('fr-FR')}</div>}
+                      {montantTotalDesFrais !== "0" && <div><span className="font-semibold">Total Frais:</span> {parseInt(montantTotalDesFrais).toLocaleString('fr-FR')} FCFA</div>}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Intervenants */}
+              {(nomsDesChefs || nomSaisissants || nomIntervenants) && (
+                <Card className="border-accent/20">
+                  <CardHeader className="bg-gradient-subtle">
+                    <CardTitle className="text-lg text-accent">Intervenants</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="space-y-3">
+                      {nomsDesChefs && <div><span className="font-semibold">Chefs:</span> {nomsDesChefs}</div>}
+                      {nomSaisissants && <div><span className="font-semibold">Saisissants:</span> {nomSaisissants}</div>}
+                      {nomIntervenants && <div><span className="font-semibold">Intervenants:</span> {nomIntervenants}</div>}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Circonstances et Notes */}
+              {(circonstances || notesSupplementaires) && (
+                <Card className="border-info/20">
+                  <CardHeader className="bg-gradient-subtle">
+                    <CardTitle className="text-lg text-info">Circonstances et Notes</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="space-y-3">
+                      {circonstances && (
+                        <div>
+                          <span className="font-semibold">Circonstances:</span>
+                          <p className="mt-1 text-muted-foreground">{circonstances}</p>
+                        </div>
+                      )}
+                      {notesSupplementaires && (
+                        <div>
+                          <span className="font-semibold">Notes Supplémentaires:</span>
+                          <p className="mt-1 text-muted-foreground">{notesSupplementaires}</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
 
             {/* Navigation Buttons */}
           <div className="flex justify-between items-center pt-6 mt-6 border-t">
