@@ -47,6 +47,7 @@ export type Database = {
           num_quittance: string | null
           num_quittance_dce: string | null
           numero: string
+          numero_dossier_office: string | null
           office: string | null
           origine_ou_provenance: string | null
           procede_de_detection: string | null
@@ -88,6 +89,7 @@ export type Database = {
           num_quittance?: string | null
           num_quittance_dce?: string | null
           numero: string
+          numero_dossier_office?: string | null
           office?: string | null
           origine_ou_provenance?: string | null
           procede_de_detection?: string | null
@@ -129,6 +131,7 @@ export type Database = {
           num_quittance?: string | null
           num_quittance_dce?: string | null
           numero?: string
+          numero_dossier_office?: string | null
           office?: string | null
           origine_ou_provenance?: string | null
           procede_de_detection?: string | null

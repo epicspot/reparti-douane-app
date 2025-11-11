@@ -25,6 +25,7 @@ const NouvelleAffaire = () => {
   // Champs du formulaire détaillé
   const [region, setRegion] = useState("");
   const [office, setOffice] = useState("");
+  const [numeroDossierOffice, setNumeroDossierOffice] = useState("");
   const [numDeclaration, setNumDeclaration] = useState("");
   const [dateDeclaration, setDateDeclaration] = useState("");
   const [nomPrenomContrevenant, setNomPrenomContrevenant] = useState("");
@@ -79,6 +80,7 @@ const NouvelleAffaire = () => {
         setMontantNet(data.montant_net?.toString() || "");
         setRegion(data.region || "");
         setOffice(data.office || "");
+        setNumeroDossierOffice(data.numero_dossier_office || "");
         setNumDeclaration(data.num_declaration || "");
         setDateDeclaration(data.date_declaration || "");
         setNomPrenomContrevenant(data.nom_prenom_contrevenant || "");
@@ -150,6 +152,7 @@ const NouvelleAffaire = () => {
         montant_net: parseFloat(montantNet) || 0,
         region,
         office,
+        numero_dossier_office: numeroDossierOffice,
         num_declaration: numDeclaration,
         date_declaration: dateDeclaration || null,
         nom_prenom_contrevenant: nomPrenomContrevenant,
@@ -277,6 +280,18 @@ const NouvelleAffaire = () => {
                       placeholder="Ex: DAKOLA"
                       required
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="numeroDossierOffice">N° Dossier Office</Label>
+                    <Input
+                      id="numeroDossierOffice"
+                      value={numeroDossierOffice}
+                      onChange={(e) => setNumeroDossierOffice(e.target.value)}
+                      placeholder="Ex: 2025/001"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Numéro de dossier spécifique à votre office
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="numero">
@@ -684,6 +699,7 @@ const NouvelleAffaire = () => {
                   <div className="grid grid-cols-2 gap-4">
                     {region && <div><span className="font-semibold">Région:</span> {region}</div>}
                     {office && <div><span className="font-semibold">Office:</span> {office}</div>}
+                    {numeroDossierOffice && <div><span className="font-semibold">N° Dossier Office:</span> {numeroDossierOffice}</div>}
                     {isEditMode && numero && <div><span className="font-semibold">N° Affaire:</span> {numero}</div>}
                     {dateAffaire && <div><span className="font-semibold">Date Affaire:</span> {new Date(dateAffaire).toLocaleDateString('fr-FR')}</div>}
                     {numDeclaration && <div><span className="font-semibold">N° Déclaration:</span> {numDeclaration}</div>}
