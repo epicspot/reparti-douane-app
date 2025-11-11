@@ -13,6 +13,42 @@ const Dashboard = () => {
 
   useEffect(() => {
     loadStats();
+
+    // Real-time updates pour les affaires et bénéficiaires
+    const affairesChannel = supabase
+      .channel('dashboard-affaires')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'affaires'
+        },
+        () => {
+          loadStats();
+        }
+      )
+      .subscribe();
+
+    const beneficiairesChannel = supabase
+      .channel('dashboard-beneficiaires')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'beneficiaires'
+        },
+        () => {
+          loadStats();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(affairesChannel);
+      supabase.removeChannel(beneficiairesChannel);
+    };
   }, []);
 
   const loadStats = async () => {

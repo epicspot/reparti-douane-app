@@ -51,6 +51,26 @@ const Historique = () => {
 
   useEffect(() => {
     loadHistorique();
+
+    // Real-time updates pour les affaires
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'affaires'
+        },
+        () => {
+          loadHistorique();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadHistorique = async () => {

@@ -21,8 +21,19 @@ import {
   Scale,
   UserCheck,
   Edit,
+  Trash2,
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Affaire {
   id: string;
@@ -88,6 +99,7 @@ const DetailsAffaire = () => {
   const [affaire, setAffaire] = useState<Affaire | null>(null);
   const [beneficiaires, setBeneficiaires] = useState<Beneficiaire[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -151,6 +163,32 @@ const DetailsAffaire = () => {
     });
   };
 
+  const supprimerAffaire = async () => {
+    if (!affaire) return;
+
+    try {
+      const { error } = await supabase
+        .from("affaires")
+        .delete()
+        .eq("id", affaire.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "L'affaire a été supprimée avec succès",
+      });
+
+      navigate("/historique");
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -209,14 +247,24 @@ const DetailsAffaire = () => {
               </p>
             </div>
           </div>
-          <Button
-            variant="secondary"
-            onClick={() => navigate(`/nouvelle-affaire/${id}`)}
-            className="gap-2"
-          >
-            <Edit className="w-4 h-4" />
-            Modifier
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => navigate(`/nouvelle-affaire/${id}`)}
+              className="gap-2"
+            >
+              <Edit className="w-4 h-4" />
+              Modifier
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => setDeleteDialogOpen(true)}
+              className="gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Supprimer
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -645,6 +693,24 @@ const DetailsAffaire = () => {
           </CardContent>
         </Card>
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer l'affaire {affaire.numero} ?
+              Cette action est irréversible et supprimera également tous les bénéficiaires associés.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={supprimerAffaire} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

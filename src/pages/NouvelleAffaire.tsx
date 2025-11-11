@@ -152,7 +152,7 @@ const NouvelleAffaire = () => {
         montant_net: parseFloat(montantNet) || 0,
         region,
         office,
-        numero_dossier_office: numeroDossierOffice,
+        numero_dossier_office: numeroDossierOffice || null,
         num_declaration: numDeclaration,
         date_declaration: dateDeclaration || null,
         nom_prenom_contrevenant: nomPrenomContrevenant,
