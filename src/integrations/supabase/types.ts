@@ -250,6 +250,10 @@ export type Database = {
         Args: { p_date_affaire: string; p_office: string }
         Returns: string
       }
+      generate_numero_dossier_office: {
+        Args: { p_date_affaire: string; p_office: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

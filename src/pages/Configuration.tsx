@@ -33,6 +33,8 @@ const Configuration = () => {
   const [nouveauChef, setNouveauChef] = useState({ nom: "", pourcentage: "" });
   const [editingFond, setEditingFond] = useState<string | null>(null);
   const [editingChef, setEditingChef] = useState<string | null>(null);
+  const [formatNumeroDossier, setFormatNumeroDossier] = useState("ANNEE/NUMERO");
+  const [separateur, setSeparateur] = useState("/");
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; type: 'fond' | 'chef' | null; id: string | null }>({
     open: false,
     type: null,
@@ -42,6 +44,7 @@ const Configuration = () => {
 
   useEffect(() => {
     loadConfig();
+    loadNumerotationSettings();
   }, []);
 
   const loadConfig = async () => {
@@ -49,6 +52,46 @@ const Configuration = () => {
     const { data: chefsData } = await supabase.from("chefs").select("*");
     setFonds(fondsData || []);
     setChefs(chefsData || []);
+  };
+
+  const loadNumerotationSettings = async () => {
+    const { data: formatData } = await supabase
+      .from("settings")
+      .select("val")
+      .eq("key", "format_numero_dossier_office")
+      .single();
+    
+    const { data: separateurData } = await supabase
+      .from("settings")
+      .select("val")
+      .eq("key", "separateur_numero_dossier")
+      .single();
+
+    if (formatData) setFormatNumeroDossier(formatData.val || "ANNEE/NUMERO");
+    if (separateurData) setSeparateur(separateurData.val || "/");
+  };
+
+  const saveNumerotationSettings = async () => {
+    try {
+      await supabase
+        .from("settings")
+        .upsert({ key: "format_numero_dossier_office", val: formatNumeroDossier });
+      
+      await supabase
+        .from("settings")
+        .upsert({ key: "separateur_numero_dossier", val: separateur });
+
+      toast({
+        title: "Succès",
+        description: "Paramètres de numérotation sauvegardés",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const ajouterFond = async () => {
@@ -288,9 +331,10 @@ const Configuration = () => {
       </div>
 
       <Tabs defaultValue="fonds" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="fonds">Fonds</TabsTrigger>
           <TabsTrigger value="chefs">Chefs</TabsTrigger>
+          <TabsTrigger value="numerotation">Numérotation</TabsTrigger>
         </TabsList>
 
         <TabsContent value="fonds" className="space-y-4">
@@ -559,6 +603,73 @@ const Configuration = () => {
                   )}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="numerotation" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Format de Numérotation du Dossier Office</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="formatNumero">Format du numéro</Label>
+                  <Input
+                    id="formatNumero"
+                    value={formatNumeroDossier}
+                    onChange={(e) => setFormatNumeroDossier(e.target.value)}
+                    placeholder="Ex: ANNEE/NUMERO"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Variables disponibles : ANNEE, MOIS, OFFICE, NUMERO
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="separateur">Séparateur</Label>
+                  <Input
+                    id="separateur"
+                    value={separateur}
+                    onChange={(e) => setSeparateur(e.target.value)}
+                    placeholder="/"
+                    className="w-24"
+                  />
+                </div>
+
+                <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
+                  <h4 className="font-semibold mb-2">Exemples de formats</h4>
+                  <ul className="text-sm space-y-1 text-muted-foreground">
+                    <li>• <code>ANNEE/NUMERO</code> → 2025/001</li>
+                    <li>• <code>ANNEE-MOIS-NUMERO</code> → 2025-11-001</li>
+                    <li>• <code>OFFICE-ANNEE/NUMERO</code> → DAKOLA-2025/001</li>
+                    <li>• <code>NUMERO/ANNEE</code> → 001/2025</li>
+                  </ul>
+                </div>
+
+                <div className="p-4 bg-info/10 border border-info/20 rounded-lg">
+                  <h4 className="font-semibold text-info mb-2">Aperçu</h4>
+                  <p className="text-sm">
+                    Format actuel : <code className="bg-background px-2 py-1 rounded">{formatNumeroDossier.replace('/', separateur)}</code>
+                  </p>
+                  <p className="text-sm mt-2">
+                    Exemple : <code className="bg-background px-2 py-1 rounded">
+                      {formatNumeroDossier
+                        .replace('ANNEE', '2025')
+                        .replace('MOIS', '11')
+                        .replace('OFFICE', 'DAKOLA')
+                        .replace('NUMERO', '001')
+                        .replace('/', separateur)}
+                    </code>
+                  </p>
+                </div>
+
+                <Button onClick={saveNumerotationSettings} className="w-full">
+                  <Save className="w-4 h-4 mr-2" />
+                  Enregistrer les paramètres
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

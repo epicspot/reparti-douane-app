@@ -282,16 +282,22 @@ const NouvelleAffaire = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="numeroDossierOffice">N° Dossier Office</Label>
+                    <Label htmlFor="numeroDossierOffice">
+                      N° Dossier Office {isEditMode ? "" : "(Auto)"}
+                    </Label>
                     <Input
                       id="numeroDossierOffice"
-                      value={numeroDossierOffice}
-                      onChange={(e) => setNumeroDossierOffice(e.target.value)}
-                      placeholder="Ex: 2025/001"
+                      value={isEditMode ? numeroDossierOffice : "Généré automatiquement"}
+                      onChange={(e) => isEditMode && setNumeroDossierOffice(e.target.value)}
+                      placeholder={isEditMode ? "Ex: 2025/001" : "Format personnalisable"}
+                      disabled={!isEditMode}
+                      className={!isEditMode ? "bg-muted/50 cursor-not-allowed" : ""}
                     />
-                    <p className="text-xs text-muted-foreground">
-                      Numéro de dossier spécifique à votre office
-                    </p>
+                    {!isEditMode && (
+                      <p className="text-xs text-muted-foreground">
+                        Le format est configurable dans Configuration
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="numero">
